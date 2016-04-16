@@ -128,6 +128,7 @@ bb-model: 模型类字段  后面的:keyup表示按下某个键弹起时触发�
 bb-click: 事件类型，支持jquery所有的事件
 
 ### 系统自带事件
+```js
 // BaseItem
 bb-click="_moveUp": 上移
 bb-click="_moveDown": 下移
@@ -147,8 +148,9 @@ bb-click="_save": 保存表单(当需要实时保存且不需要提示“保存�
 ### 系统自带属性
 bb-checked="checked": 是否选中
 bb-checked="checked_all": 是否全部选中
-
+```
 ### 组件通用方法
+```js
 this._super(type); // 引用父类，当参数type为view时返回上级视图 model时返回上级模型类，data上级模型类数据
 this._view('viewId');// 获取视图
 this._region('name', ProductList, {}); // 添加视图区域
@@ -167,7 +169,7 @@ this._require(['ProductList'], function(ProductList){}); // 请求模块
 this._delay(function(){}, 5000); // 延迟执行
 this._bind(function(){}); // 绑定上下文
 this._initToolTip(parentNode, className); // 添加提示
-
+```
 ### 操作模型类
 ```js
 // 重置模型类
