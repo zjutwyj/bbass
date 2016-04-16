@@ -1,0 +1,94 @@
+.ui-transfer-wrap {
+  .ui-transfer-left,
+  .ui-transfer-right {
+    border: 1px solid #ff8074;
+    height: 243px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    width: 200px;
+    float: left;
+  }
+  .ui-transfer-left-ul,
+  .ui-transfer-right-ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    width: 100%;
+    float: left;
+  }
+  .ui-transfer-left-li,
+  .ui-transfer-right-li {
+    font-size: 12px;
+    padding: 2px;
+    cursor: default;
+    height: 20px;
+    line-height: 20px;
+  }
+  .ui-transfer-left-li:hover {
+    background-color: #ff8074;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+  }
+  .ui-transfer-arrow {
+    width: 30px;
+    height: 36px;
+    float: left;
+    font-size: 38px !important;
+    color: #FF5241;
+    padding-top: 116px;
+    text-align: center;
+    text-indent: -3px;
+  }
+  .ui-transfer-left-ul .strControl,
+  .ui-transfer-right-ul .strControl {
+    width: 145px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 12px;
+    padding-left: 4px;
+  }
+  .ui-transfer-right-li .rbody {
+    position: relative;
+  }
+  .ui-transfer-right-li .iconfont {
+    padding-top: 2px;
+    font-size: 12px;
+    color: #ff8074;
+  }
+  .ui-transfer-right-li .iconfont:hover {
+    color: #FF5241;
+  }
+  .rUp {
+    position: absolute;
+    top: 0;
+    right: 32px;
+    height: 16px;
+    line-height: 16px;
+    width: 16px;
+    cursor: pointer;
+  }
+  .rDown {
+    position: absolute;
+    top: 0;
+    right: 16px;
+    height: 16px;
+    line-height: 16px;
+    width: 16px;
+    cursor: pointer;
+  }
+  .rClose {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 16px;
+    line-height: 16px;
+    width: 16px;
+    cursor: pointer;
+  }
+  .ui-transfer-right-li {
+    cursor: move !important;
+  }
+}

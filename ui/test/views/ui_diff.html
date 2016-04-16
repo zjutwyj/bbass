@@ -1,0 +1,32 @@
+<div class="theme-black" style="padding: 20px;background-color: #fff;">
+  <input type="text" class="text" bb-model="color:keyup" bb-change="handleChange1" value="{{color}}" />
+  <input type="text" class="text" bb-model="color:keyup" bb-change="handleChange1" value="{{color}}" />
+  <input type="text" class="text" bb-model="args.color:keyup" value="{{args.color}}" />
+  <input type="text" class="text" bb-model="color1:keyup" value="{{color1}}" />
+  <input type="text" class="text" bb-model="args.color1:keyup" value="{{args.color1}}" />
+  <textarea bb-model="color:keyup">{{color}}</textarea>
+  <br>
+  <input type="button" value="值1(#999)" bb-click="submit1">
+  <input type="button" value="值1(#999)" bb-click="submit1">
+  <input type="button" value="值2(#ff5241)" bb-click="submit2">
+  <div class="result1 " bb-watch="color:style:html" bb-change="handleChange" style="color: {{color}};">{{color}}</div>
+  <div class="result2 " bb-watch="args.color:style:html" style="color: {{args.color}};">{{args.color}}</div>
+  <input type="button" value="dom替换3(#999)" bb-click="submit3">
+  <input type="button" value="dom替换4(#ff5241)" bb-click="submit4">
+  <div class="result3 " bb-watch="color1:style:html"  style="color: {{color1}};">{{color1}}</div>
+  <div class="result4 " bb-watch="args.color1:style:html"  style="color: {{args.color1}};">{{args.color1}}</div>
+  <br>
+  <input type="button" value="模拟组件传入数据(_reset)" bb-click="submit5">
+  <div class="all1" bb-watch="color:style:html" style="color: {{color}};">{{color}}</div>
+  <div class="all2" bb-watch="color1:style:html" style="color: {{color1}};">{{color1}}</div>
+  <div class="all3" bb-watch="args.color:style:html" style="color: {{args.color}};">{{args.color}}</div>
+  <div class="all4" bb-watch="args.color1:style:html" style="color: {{args.color1}};">{{args.color1}}</div>
+
+
+  <input type="button" bb-click="tab1" value="切换(00)" class="abutton faiButton faiButton-hover" style="margin-top:5px;" />
+  <input type="button" bb-click="tab2" value="切换(01)" class="abutton faiButton faiButton-hover" style="margin-top:5px;" />
+
+
+  <div bb-watch="tab:style" style="display: {{#compare tab '===' '00'}}block;{{else}}none;{{/compare}}">00</div>
+  <div bb-watch="tab:style" style="display: {{#compare tab '===' '01'}}block;{{else}}none;{{/compare}}">01</div>
+</div>

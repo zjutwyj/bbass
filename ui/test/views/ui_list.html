@@ -1,0 +1,48 @@
+<style type="text/css">
+.list-render {
+  list-style: none;
+}
+
+.list-render .hover .test-item-name,
+.list-render .item-active .test-item-name {
+  background-color: #ff4942;
+  color: #fff;
+}
+
+.test-item-name,
+.test-item-btns {
+  float: left;
+}
+
+.item-active .btn-play {
+  text-indent: -27px;
+}
+</style>
+<div class="form" id="list-test" style="background: #fff;padding: 20px;">
+<label class="checkAll"><input bb-click="_checkAll" type="checkbox" bb-checked="checked_all"/>全选111</label>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="javascript:;" bb-click="addOne">插入到末尾</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="javascript:;" bb-click="insertOne">插入到第1个元素</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="javascript:;" bb-click="insertThree">第3个元素</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="javascript:;" bb-click="insertFive">第5个元素</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="javascript:;" bb-click="batchDel">批量删除</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <ul class="list-render clearfix">
+    <div class="test-item-name" style="cursor: pointer;" bb-watch="checked,dx,isdisplay" bb-change="handleChange">
+    <input type="checkbox" bb-click="_check" bb-checked="checked"/><span bb-click="_check"> {{plus dx 1}}. {{text}}</span></div>
+    <div class="test-item-btns">
+      <a href="javascript:;" bb-click="setDisplay" class="btn-display">{{#compare isdisplay '==' '1'}}已显示{{else}}已隐藏{{/compare}}</a>
+      <!-- <a href="javascript:;" class="btn-edit">编辑</a> -->
+      <a href="javascript:;" bb-click="_moveUp" class="btn-move-up">上移</a> <a href="javascript:;" bb-click="_moveDown" class="btn-move-down">下移</a> <a href="javascript:;" bb-click="del" class="btn-delete">删除</a> </div>
+  </ul>
+  <div id="pagination-container1" data-numLength="7" class="clearfix"></div>
+  <div id="list2">
+    <ul class="list-render2 clearfix">
+      <div class="test-item-name" style="cursor: pointer;">
+        <div class="test-item-btns">
+        <span bb-click="_check">{{text}}</span>
+          <a href="javascript:;" bb-click="_check" class="btn-play" style="display: inline-block; width: 27px; overflow: hidden; height: 14px; line-height: 14px;">播放 暂停</a>
+        </div>
+      </div>
+    </ul>
+  </div>
+  <div id="list-test-result"></div>
+</div>
