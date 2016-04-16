@@ -14,9 +14,9 @@ var Module = BaseView.extend({
       data: {} // 传递给模型类的数据
 
       // 统一部分
-      onChange: fucntion(){},
-      setValue: function(val){},
-      onUpdate: function(){},
+      onChange: fucntion(){}, // 手动调用
+      setValue: function(val){}, // 为组件赋值
+      onUpdate: function(){}, // 当模型类改变时系统会实时调用这个回调
 
       // BaseList 部分
       model: ProductModel, // 模型类,
@@ -115,8 +115,8 @@ app.addRegion('imagePickerConfig', ImagePickerConfig, {
 ### 数据绑定
 <div class=".bind" bb-watch="args.name" bb-render=".bind:style" bb-change="handleChange" style="display: {{#compare args.name '===' 'show'}}block;{{else}}none;{{/compare}}"></div>
 ```js
-bb-watch:  监听的字段， 多个字段以逗号隔开(当只要渲染当前元素时， 可以使用bb-watch="args.name:style"简写，但不能但不能在两个地方使用同一个表达式)
-bb-render: 需要重新渲染的元素，后面带:style(样式) :class(属性) :html(内容) :value(表单)若不带则整个dom替换掉
+bb-watch:  监听的字段，多个字段以逗号隔开(当只要渲染当前元素时， 可以使用bb-watch="args.name:style"简写)
+bb-render: 需要重新渲染的元素或属性，后面带:style(样式) :class(属性) :html(内容) :value(表单)若不带则整个dom替换掉
            当同一个元素带多个属性时，可简写为.bind:style:html:class
 bb-change: 事件函数(其中参数为改变的字段名称)
 ```
@@ -204,7 +204,7 @@ this._getDefault('args.color', '#999'); // 获取args.color值，若不存在则
 ```js
 this._push(model, dx); // model可为object对象或new model()对象， dx为插入的索引值，不填默认插入到尾部
 this._getLength(); // 获取列表长度
-this._insertOrder(evt.oldIndex, evt.newIndex, function(list) {}); 插序排序
+this._insertOrder(evt.oldIndex, evt.newIndex, function(list) {}); //插序排序
 this._getItems(); // 获取全部列表
 this._getItem(index); // 获取第index项
 this._getCheckedItems(isPluck); // 获取选中的列表项 isPluck为true时自动转化为model.toJSON()对象
