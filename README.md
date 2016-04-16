@@ -1,5 +1,5 @@
 ### 组件生命周期及初始配置参数说明
-
+```js
 var Module = BaseView.extend({
 
   // 组件初始化
@@ -97,19 +97,20 @@ var Module = BaseView.extend({
   destory: function(){}
 
 });
-
+```
 ### 组件ID
 this.viewId // 指定ID， 可以用app.getView(this.viewId)获取
 this.cid // 唯一标识符， 由系统生成
 
 ### 组件重渲染
+```js
 app.addRegion('imagePickerConfig', ImagePickerConfig, {
   el: '.image-picker-config',
   data: this.model.toJSON(),      // 将当前视图的模型类传入ImagePickerConfig中
   diff: true,                     // 开启diff算法， 默认是重新渲染
   onChange: this._bind(this._set) // 组件模型类改变回调
 });
-
+```
 ### 数据绑定
 <div class=".bind" bb-watch="args.name" bb-render=".bind:style" bb-change="handleChange" style="display: {{#compare args.name '===' 'show'}}block;{{else}}none;{{/compare}}"></div>
 
@@ -168,6 +169,7 @@ this._bind(function(){}); // 绑定上下文
 this._initToolTip(parentNode, className); // 添加提示
 
 ### 操作模型类
+```js
 // 重置模型类
 this._reset();
 this._reset({name: 'aaa'}); // 重置模型类并设置name为aaa
@@ -191,8 +193,9 @@ this._setAttr({
 
 this._setDefault('args.color', '#999'); // 设置默认值 #999
 this._getDefault('args.color', '#999'); // 获取args.color值，若不存在则初始化为#999并返回
-
+```
 ### 列表操作
+```js
 this._push(model, dx); // model可为object对象或new model()对象， dx为插入的索引值，不填默认插入到尾部
 this._getLength(); // 获取列表长度
 this._insertOrder(evt.oldIndex, evt.newIndex, function(list) {}); 插序排序
@@ -221,7 +224,7 @@ this._search({
       // 若通过返回true
       return item.attributes[obj.key].indexOf(obj.value) !== -1;
 }});
-
+```
 ### BaseItem操作
 this._getPage(); //获取当前列表第几页
 
@@ -257,6 +260,7 @@ http://sj.jihui88.com/mobile/index.html#/component
 {{keyMap module.type 'aa'}} // key value 映射
 
 ### BaseService数据请求服务(具体使用详见/app/scripts/service/Service.js)
+```js
 new BaseService().factory({
     url: '', // 请求地址
     data: {},// 表单参数
@@ -284,7 +288,7 @@ new BaseService().factory({
 }).done(function(result){
     console.dir(result);
 });
-
+```
 ### 第三方插件
 对话框(artDialog_v6) : http://aui.github.io/artDialog/doc/index.html [dialog-plus]
 代码编辑器(codemirror) : http://codemirror.net/ [CodeMirror]
