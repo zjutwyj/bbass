@@ -99,9 +99,10 @@ var Module = BaseView.extend({
 });
 ```
 ### 组件ID
+```js
 this.viewId // 指定ID， 可以用app.getView(this.viewId)获取
 this.cid // 唯一标识符， 由系统生成
-
+```
 ### 组件重渲染
 ```js
 app.addRegion('imagePickerConfig', ImagePickerConfig, {
@@ -113,20 +114,22 @@ app.addRegion('imagePickerConfig', ImagePickerConfig, {
 ```
 ### 数据绑定
 <div class=".bind" bb-watch="args.name" bb-render=".bind:style" bb-change="handleChange" style="display: {{#compare args.name '===' 'show'}}block;{{else}}none;{{/compare}}"></div>
-
+```js
 bb-watch:  监听的字段， 多个字段以逗号隔开(当只要渲染当前元素时， 可以使用bb-watch="args.name:style"简写，但不能但不能在两个地方使用同一个表达式)
 bb-render: 需要重新渲染的元素，后面带:style(样式) :class(属性) :html(内容) :value(表单)若不带则整个dom替换掉
            当同一个元素带多个属性时，可简写为.bind:style:html:class
 bb-change: 事件函数(其中参数为改变的字段名称)
-
+```
 ### 表单元素双向绑定
 <input bb-model="name:keyup" type="text" class="text" value="{{name}}" />
+```js
 bb-model: 模型类字段  后面的:keyup表示按下某个键弹起时触发，默认为:change
-
+```
 ### 事件绑定
 <input bb-click="handleAdd" type="button" value="添加表单" class="abutton faiButton faiButton-hover" />
+```js
 bb-click: 事件类型，支持jquery所有的事件
-
+```
 ### 系统自带事件
 ```js
 // BaseItem
@@ -144,8 +147,9 @@ bb-click="_clearChecked": 全不选中  当参数为true时， 忽略diff
 // BaseDetail
 bb-click="_reset": 初始化表单
 bb-click="_save": 保存表单(当需要实时保存且不需要提示“保存成功”时使用)
-
+```
 ### 系统自带属性
+```js
 bb-checked="checked": 是否选中
 bb-checked="checked_all": 是否全部选中
 ```
@@ -240,6 +244,7 @@ http://sj.jihui88.com/mobile/index.html#/component
 详见doc文档
 
 ### 模板指令
+```js
 {{#compare ../page '!==' this}}danaiPageNum{{else}}active{{/compare}}  // 比较
 {{#contains ../element this}}checked="checked"{{/contains}} //是否包含
 {{#xif "this.orderStatus != 'completed' && this.orderStatus != 'invalid'"}}disabled{{/xif}} // 判断
@@ -260,7 +265,7 @@ http://sj.jihui88.com/mobile/index.html#/component
 {{replace module.type '\d*$' ''}} // 替换
 {{default module.type 'aa'}} // 取默认值
 {{keyMap module.type 'aa'}} // key value 映射
-
+```
 ### BaseService数据请求服务(具体使用详见/app/scripts/service/Service.js)
 ```js
 new BaseService().factory({
@@ -292,6 +297,7 @@ new BaseService().factory({
 });
 ```
 ### 第三方插件
+```js
 对话框(artDialog_v6) : http://aui.github.io/artDialog/doc/index.html [dialog-plus]
 代码编辑器(codemirror) : http://codemirror.net/ [CodeMirror]
 滚动条(isroll) : http://iscrolljs.com/ [IScroll]
@@ -305,3 +311,4 @@ new BaseService().factory({
 百度编辑器(ueditor) : http://ueditor.baidu.com/website/ [Ueditor]
 图片上传(fileupload) : https://blueimp.github.io/jQuery-File-Upload/ [FileUpload]
 移动端元素选择器(zepto): http://www.zeptojs.cn/
+```
