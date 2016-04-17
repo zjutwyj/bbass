@@ -100,7 +100,7 @@ var Module = BaseView.extend({
 ```
 ### 组件ID
 ```js
-this.viewId // 指定ID， 可以用app.getView(this.viewId)获取
+this.viewId // 指定ID， 可以用this._view(this.viewId)获取
 this.cid // 唯一标识符， 由系统生成
 ```
 ### 组件重渲染
@@ -116,12 +116,11 @@ this._region('imagePickerConfig', ImagePickerConfig, {
 ```html
 <div class=".bind" bb-watch="args.name" bb-render=".bind:style" bb-change="handleChange" style="display: {{#compare args.name '===' 'show'}}block;{{else}}none;{{/compare}}"></div>
 ```
-```js
-bb-watch:  监听的字段，多个字段以逗号隔开(当只要渲染当前元素时， 可以使用bb-watch="args.name:style"简写)
+>bb-watch:  监听的字段，多个字段以逗号隔开(当只要渲染当前元素时， 可以使用bb-watch="args.name:style"简写)
 bb-render: 需要重新渲染的元素或属性，后面带:style(样式) :class(属性) :html(内容) :value(表单)若不带则整个dom替换掉
            当同一个元素带多个属性时，可简写为.bind:style:html:class
 bb-change: 事件函数(其中参数为改变的字段名称)
-```
+
 ### 表单元素双向绑定
 <input bb-model="name:keyup" type="text" class="text" value="{{name}}" />
 ```js
