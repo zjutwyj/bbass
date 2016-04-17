@@ -84,8 +84,8 @@ var Module = BaseView.extend({
   // 组件渲染后
   afterRender: function(){},
 
-  // 模型类改变回调
-  update: function(){},
+  // 监听的字段改变时回调
+  update: function(name){},
 
   // 模型类保存前(主要用于BaseDetail组件中)
   beforeSave: function(){},
@@ -105,15 +105,17 @@ this.cid // 唯一标识符， 由系统生成
 ```
 ### 组件重渲染
 ```js
-app.addRegion('imagePickerConfig', ImagePickerConfig, {
+this._region('imagePickerConfig', ImagePickerConfig, {
   el: '.image-picker-config',
   data: this.model.toJSON(),      // 将当前视图的模型类传入ImagePickerConfig中
-  diff: true,                     // 开启diff算法， 默认是重新渲染
+  diff: true,                     // 开启diff， 默认是重新渲染
   onChange: this._bind(this._set) // 组件模型类改变回调
 });
 ```
 ### 数据绑定
+```html
 <div class=".bind" bb-watch="args.name" bb-render=".bind:style" bb-change="handleChange" style="display: {{#compare args.name '===' 'show'}}block;{{else}}none;{{/compare}}"></div>
+```
 ```js
 bb-watch:  监听的字段，多个字段以逗号隔开(当只要渲染当前元素时， 可以使用bb-watch="args.name:style"简写)
 bb-render: 需要重新渲染的元素或属性，后面带:style(样式) :class(属性) :html(内容) :value(表单)若不带则整个dom替换掉
@@ -235,16 +237,16 @@ this._search({
 this._getPage(); //获取当前列表第几页
 
 ### ui库
-http://sj.jihui88.com/mobile/index.html#/ui
+[ui库](http://sj.jihui88.com/mobile/index.html#/ui)
 
 ### component库
-http://sj.jihui88.com/mobile/index.html#/component
+[component库](http://sj.jihui88.com/mobile/index.html#/component)
 
 ### 工具类库
 详见doc文档
 
 ### 模板指令
-```js
+```html
 {{#compare ../page '!==' this}}danaiPageNum{{else}}active{{/compare}}  // 比较
 {{#contains ../element this}}checked="checked"{{/contains}} //是否包含
 {{#xif "this.orderStatus != 'completed' && this.orderStatus != 'invalid'"}}disabled{{/xif}} // 判断
@@ -297,18 +299,16 @@ new BaseService().factory({
 });
 ```
 ### 第三方插件
-```js
-对话框(artDialog_v6) : http://aui.github.io/artDialog/doc/index.html [dialog-plus]
-代码编辑器(codemirror) : http://codemirror.net/ [CodeMirror]
-滚动条(isroll) : http://iscrolljs.com/ [IScroll]
-单元测试(jasmine) : http://jasmine.github.io/ [jasmine]
-元素选择器(jquery) : https://jquery.com/
-百度地图(BMap): http://lbsyun.baidu.com/index.php?title=uri/api/web [BMap]
-滚动样式(skrollr) : https://github.com/Prinzhorn/skrollr [Skrollr]
-拖动条(slider) : http://refreshless.com/nouislider/ [Slider]
-拖动排序(sortable) : https://github.com/RubaXa/Sortable     [Sortable]
-图片切换(swiper) : http://idangero.us/swiper/get-started [Swiper]
-百度编辑器(ueditor) : http://ueditor.baidu.com/website/ [Ueditor]
-图片上传(fileupload) : https://blueimp.github.io/jQuery-File-Upload/ [FileUpload]
-移动端元素选择器(zepto): http://www.zeptojs.cn/
-```
+[对话框(artDialog_v6)](http://aui.github.io/artDialog/doc/index.html) ["dialog-plus"]
+[代码编辑器(codemirror)](http://codemirror.net/) ["CodeMirror"]
+[滚动条(isroll)](http://iscrolljs.com/) ["IScroll"]
+[单元测试(jasmine)](http://jasmine.github.io/) ["jasmine"]
+[元素选择器(jquery)](https://jquery.com/)
+[百度地图(BMap)](http://lbsyun.baidu.com/index.php?title=uri/api/web) ["BMap"]
+[滚动样式(skrollr)](https://github.com/Prinzhorn/skrollr) ["Skrollr"]
+[拖动条(slider)](http://refreshless.com/nouislider/) ["Slider"]
+[拖动排序(sortable)](https://github.com/RubaXa/Sortable) ["Sortable"]
+[图片切换(swiper)](http://idangero.us/swiper/get-started) ["Swiper"]
+[百度编辑器(ueditor)](http://ueditor.baidu.com/website/) ["Ueditor"]
+[图片上传(fileupload)](https://blueimp.github.io/jQuery-File-Upload/) ["FileUpload"]
+[移动端元素选择器(zepto](http://www.zeptojs.cn/)
