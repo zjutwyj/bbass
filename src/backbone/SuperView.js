@@ -16,6 +16,7 @@ var SuperView = Backbone.View.extend({
   constructor: function(options) {
     this.options = options || {};
     this._re_dup = {};
+    this._re_selector = {};
     if (this.init && Est.typeOf(this.init) !== 'function') {
       this._initialize(this.init);
     }
@@ -43,16 +44,21 @@ var SuperView = Backbone.View.extend({
    * @method [构造] - _super
    * @return {[type]} [description]
    */
-  _super: function(type) {
-    switch (type) {
-      case 'data':
-        return app.getView(this._options.viewId).model.toJSON();
-      case 'view':
-        return app.getView(this._options.viewId);
-      case 'model':
-        return app.getView(this._options.viewId).model;
-      default:
-        return this;
+  _super: function(type, args) {
+    if (Est.typeOf(type) === 'object') {
+      this._initialize(type);
+    } else {
+      switch (type) {
+        case 'data':
+          return app.getView(this._options.viewId).model.toJSON();
+        case 'view':
+          return app.getView(this._options.viewId);
+        case 'model':
+          return app.getView(this._options.viewId).model;
+        default:
+          if (this[type]) this[type](args);
+          return this;
+      }
     }
   },
   /**
@@ -141,17 +147,7 @@ var SuperView = Backbone.View.extend({
     var viewId = options.viewId ? options.viewId :
       Est.typeOf(options.id) === 'string' ? options.id : options.moduleId;
     if (Est.typeOf(viewId) === 'function') viewId = Est.nextUid('dialog_view');
-    /*    options.width = options.width || 'auto';
-        options.title = options.title || null;
-        options.cover = Est.typeOf(options.cover) === 'boolean' ? options.cover : false;
-        options.autofocus = Est.typeOf(options.autofocus) === 'boolean' ? options.autofocus : false;
-        options.hideOkBtn = Est.typeOf(options.hideOkBtn) === 'boolean' ? options.hideOkBtn : true;
-        options.hideCloseBtn = Est.typeOf(options.hideCloseBtn) === 'boolean' ? options.hideCloseBtn : true;
-        options.button = options.button || [];
-        options.quickClose = options.cover ? false : (Est.typeOf(options.autofocus) === 'boolean' ? options.quickClose : false);
-        options.skin = options.skin || 'dialog_min';*/
-
-    options = Est.extend({
+    var comm = {
       width: 'auto',
       title: null,
       cover: false,
@@ -162,7 +158,12 @@ var SuperView = Backbone.View.extend({
       quickClose: options.cover ? false :
         (Est.typeOf(options.autofocus) === 'boolean' ? options.quickClose : false),
       skin: 'dialog_min'
-    }, options);
+    }
+
+    if (options.moduleId && app.getStatus(options.moduleId)) {
+      comm = Est.extend(comm, app.getStatus(options.moduleId));
+    }
+    options = Est.extend(comm, options);
 
     options = Est.extend(options, {
       el: '#base_item_dialog' + viewId,
@@ -322,7 +323,14 @@ var SuperView = Backbone.View.extend({
         node.html(result);
         break;
       case 'checked':
-        node.prop('checked', this._get(/bb-checked=\"(.*?)\"\s?/img.exec(selector)[1]));
+        //node.prop('checked', this._get(/bb-checked=\"(.*?)\"\s?/img.exec(selector)[1]));
+        if (this._get(/bb-checked=\"(.*?)\"\s?/img.exec(selector)[1])) {
+          node.attr('checked', true);
+          node.prop('checked', true);
+        } else {
+          node.attr('checked', false);
+          node.prop('checked', false);
+        }
         break;
       default:
         node.attr(ngAttrName, result);
@@ -384,6 +392,36 @@ var SuperView = Backbone.View.extend({
     return list;
   },
   /**
+   * [bb-watch="signContent.icon:class:html,signContent.iconType:style"]:class:html,signContent.iconType:style,[bb-watch="signContent.icon:src,signContent.iconType:style"]:src
+   * @param  {[type]} selector [description]
+   * @return {[type]}          [description]
+   */
+  _getSelectorSplit: function(selector) {
+    var hash = Est.hash(selector);
+    //if (hash in this._re_selector) return this._re_selector[hash];
+    var list = selector.split(',');
+    var list2 = [];
+    var temp = '';
+
+    if (selector.indexOf('[bb-watch=') > -1) {
+      Est.each(list, function(item) {
+        if (item.indexOf('[bb-') > -1 && item.indexOf(']') === -1) {
+          temp = item;
+        } else if (item.indexOf(']') > -1 && item.indexOf('[bb-') === -1) {
+          temp += (',' + item);
+          list2.push(temp);
+        } else if (!Est.isEmpty(item)) {
+          list2.push(item);
+        }
+      });
+    } else {
+      list2 = list;
+    }
+
+    this._re_selector[hash] = list2;
+    return list2;
+  },
+  /**
    * 视图重新渲染
    *
    * @method [渲染] - _viewReplace
@@ -395,7 +433,7 @@ var SuperView = Backbone.View.extend({
    */
   _viewReplace: function(selector, model, cbs, name) {
     try {
-      Est.each(selector.split(','), Est.proxy(function(item) {
+      Est.each(this._getSelectorSplit(selector), this._bind(function(item) {
         var list = [],
           _$template = '',
           _result = '',
@@ -461,7 +499,7 @@ var SuperView = Backbone.View.extend({
             this['h_temp_r_' + _hash] = _result;
           }
         }
-      }, this));
+      }));
       if (cbs) {
         Est.each(cbs, function(cb) {
           cb.call(this, name);
@@ -513,7 +551,7 @@ var SuperView = Backbone.View.extend({
         }
       }
       if (modelId in this.watchFields) {
-        Est.each(selector.split(','), function(item) {
+        Est.each(this._getSelectorSplit(selector), function(item) {
           if (this.watchFields[modelId].indexOf(item) === -1) {
             this.watchFields[modelId] = this.watchFields[modelId] + ',' + item;
           }
@@ -558,6 +596,7 @@ var SuperView = Backbone.View.extend({
           model = '',
           change = '',
           w_list = [],
+          watch_render = {},
           w_render = '',
           render = '';
 
@@ -568,16 +607,22 @@ var SuperView = Backbone.View.extend({
         if (Est.isEmpty(watch) && Est.isEmpty(model)) return;
 
         if (watch.length > 1) {
-          w_list = watch[1].split(':');
-          w_render = '[bb-watch="' + watch[1] + '"]' + watch[1].substring(watch[1].indexOf(':'), watch[1].length);
-          if (w_list.length > 1) {
-            if (render.length < 1) {
-              render = ['', w_render];
-            } else {
-              render[1] += (',' + w_render);
+          if (watch[1].indexOf(':') > -1) {
+            watch_render = this._getWatchRender(watch, render);
+            watch = watch_render.watch;
+            render = watch_render.render;
+          } else {
+            w_list = watch[1].split(':');
+            w_render = '[bb-watch="' + watch[1] + '"]' + watch[1].substring(watch[1].indexOf(':'), watch[1].length);
+            if (w_list.length > 1) {
+              if (render.length < 1) {
+                render = ['', w_render];
+              } else {
+                render[1] += (',' + w_render);
+              }
             }
+            watch[1] = w_list[0];
           }
-          watch[1] = w_list[0];
         }
         list.push({
           watch: watch.length > 1 ? watch[1] : model[1].split(':')[0],
@@ -590,6 +635,38 @@ var SuperView = Backbone.View.extend({
       this._watch(item.watch.split(','), item.render, Est.isEmpty(item.change) ? null : item.change);
     }));
     if (this.onWatch) this.onWatch.call(this, arguments);
+  },
+  /**
+   * bb-watch="args.color:style,args.color1:html"
+   * @method _getWatchRender
+   * @param  {[type]} watch  [description]
+   * @param  {[type]} render [description]
+   * @return {[type]}        [description]
+   */
+  _getWatchRender: function(watch, render) {
+    var _watch = '';
+    var _render = '';
+    var _watchs = watch[1].split(',');
+
+    Est.each(_watchs, function(item) {
+      var w_list = [];
+
+      w_list = item.split(':');
+      _render += ((Est.isEmpty(_render) ? '' : ',') + '[bb-watch="' + watch[1] + '"]' + item.substring(item.indexOf(':'), item.length));
+      _watch += ((Est.isEmpty(_watch) ? '' : ',') + w_list[0]);
+    });
+
+    watch[1] = _watch;
+    if (render.length < 1) {
+      render = ['', _render];
+    } else {
+      render[1] += (',' + _render);
+    }
+
+    return {
+      watch: watch,
+      render: render
+    };
   },
   /**
    * 绑定模型类与事件
@@ -684,7 +761,7 @@ var SuperView = Backbone.View.extend({
         }
       } else {
         if (Est.typeOf(this.model.get(item)) === 'string') {
-          this.model.set(item, parse(this.model.get(item)));
+          if (!Est.isEmpty(this._get(item))) this.model.set(item, parse(this.model.get(item)));
         }
       }
     }, this);
@@ -983,9 +1060,11 @@ var SuperView = Backbone.View.extend({
       var _name, isArray = Est.typeOf(name) === 'array';
       var _nameList = [];
       var _one = null;
+
       _name = isArray ? name.join('_') : name;
       _one = '_one_' + _name;
       this[_one] = Est.typeOf(this[_one]) === 'undefined' ? true : false;
+
       if (this[_one]) {
         if (isArray) {
           Est.each(name, function(item) {
@@ -1050,10 +1129,12 @@ var SuperView = Backbone.View.extend({
   _initToolTip: function($parent, className) {
     var _className = className || '.tool-tip';
     var $tip = $parent ? $(_className, $parent) : this.$(_className);
+
     $tip.hover(function(e) {
       var title = $(this).attr('data-title') || $(this).attr('title');
       var offset = $(this).attr('data-offset') || 0;
       if (Est.isEmpty(title)) return;
+
       BaseUtils.dialog({
         id: Est.hash(title || 'error:446'),
         title: null,
@@ -1074,12 +1155,28 @@ var SuperView = Backbone.View.extend({
           if (app.getDialog(item)) app.getDialog(item).close();
         });
         app.addData('toolTipList', []);
+
       }, this));
     }, function() {
       try {
         app.getDialog(Est.hash($(this).attr('data-title') || $(this).attr('title'))).close();
       } catch (e) {}
     });
+  },
+  /**
+   * 关闭对话框
+   * @method _close
+   */
+  _close: function() {
+    if (app.getDialog(this.viewId)) app.getDialog(this.viewId).close().remove();
+  },
+  /**
+   * service服务
+   * @method _service
+   * @return {[type]} [description]
+   */
+  _service: function(type, options) {
+    return Service[type](options);
   },
   _empty: function() {},
   render: function() {

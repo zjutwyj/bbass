@@ -36,6 +36,38 @@ var BaseCollection = Backbone.Collection.extend({
     Backbone.Collection.apply(this, [null, arguments]);
   },
   /**
+   * 调用父类方法
+   * @method [构造] - _super
+   * @return {[type]} [description]
+   */
+  _super: function(type, args) {
+    if (Est.typeOf(type) === 'object') {
+      this._initialize(type);
+    } else {
+      switch (type) {
+        case 'data':
+          if (app.getView(this.options.viewId)) {
+            return app.getView(this.options.viewId).model.toJSON();
+          } else {
+            return this.options.data;
+          }
+          break;
+        case 'model':
+          if (app.getView(this.options.viewId)) {
+            return app.getView(this.options.viewId).model;
+          } else {
+            return null;
+          }
+          break;
+        case 'view':
+          return app.getView(this.options.viewId);
+        default:
+          if (app.getView(this.options.viewId)[type]) app.getView(this.options.viewId)[type](args);
+          return this;
+      }
+    }
+  },
+  /**
    * 初始化
    *
    * @method [初始化] - _initialize ( 初始化 )

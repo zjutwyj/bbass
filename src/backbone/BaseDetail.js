@@ -133,11 +133,14 @@ var BaseDetail = SuperView.extend({
       ctx.model.set('id', ctx.passId);
       ctx.model.set('_data', ctx._options.data);
       ctx.model.set('CONST', CONST);
+      if (ctx.beforeLoad) ctx.beforeLoad.call(this);
       ctx.model.fetch().done(function(response) {
         if (response.msg === CONST.LANG.NOT_LOGIN) {
           Est.trigger('checkLogin');
         }
-        ctx.model.set('_isAdd', ctx._isAdd = false), ctx.render();
+        ctx.model.set('_isAdd', ctx._isAdd = false);
+        if (ctx.afterLoad) ctx.afterLoad.call(ctx);
+        ctx.render();
       });
     } else {
       ctx.passId = new Date().getTime();
@@ -375,10 +378,10 @@ var BaseDetail = SuperView.extend({
    * @method [事件] - _close ( 移除所有绑定事件 )
    * @author wyj 14.11.16
    */
-  _close: function() {
+ /* _close: function() {
     debug('- BaseDetail.close'); //debug__
     this.undelegateEvents();
     this.stopListening();
     this.off();
-  }
+  }*/
 });

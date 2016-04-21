@@ -1014,6 +1014,12 @@ Est.mixin({
   getMaxPage_2: function(totalCount, pageSize) {
     return totalCount > pageSize ? Math.ceil(totalCount / pageSize) : 1;
   },
+  /**
+   * 快速排序算法
+   * @method quickSort
+   * @param  {[type]} arr [description]
+   * @return {[type]}     [description]
+   */
   quickSort: function(arr){
     if (arr.length <=1) {
       return arr;
@@ -1030,5 +1036,36 @@ Est.mixin({
       }
     }
     return Est.quickSort(left).concat([pivot], Est.quickSort(right));
+  },
+    /**
+   * Debounce a function so it only gets called after the
+   * input stops arriving after the given wait period.
+   *
+   * @param {Function} func
+   * @param {Number} wait
+   * @return {Function} - the debounced function
+   */
+
+  _debounce function(func, wait) {
+    var timeout, args, context, timestamp, result;
+    var later = function later() {
+      var last = Date.now() - timestamp;
+      if (last < wait && last >= 0) {
+        timeout = setTimeout(later, wait - last);
+      } else {
+        timeout = null;
+        result = func.apply(context, args);
+        if (!timeout) context = args = null;
+      }
+    };
+    return function () {
+      context = this;
+      args = arguments;
+      timestamp = Date.now();
+      if (!timeout) {
+        timeout = setTimeout(later, wait);
+      }
+      return result;
+    };
   }
 });

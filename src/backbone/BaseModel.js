@@ -14,7 +14,7 @@
 
 
 var BaseModel = Backbone.Model.extend({
-  defaults: { checked: false, checked_all: false, children: []},
+  defaults: { checked: false, checked_all: false, children: [] },
   baseId: '',
   /**
    * 初始化请求连接, 判断是否为新对象， 否自动加上ID
@@ -24,7 +24,7 @@ var BaseModel = Backbone.Model.extend({
    * @return {*}
    * @author wyj 14.11.16
    */
-  url: function () {
+  url: function() {
     var base = this.baseUrl;
     var _url = '';
     if (!base) return '';
@@ -34,9 +34,9 @@ var BaseModel = Backbone.Model.extend({
     var sep = Est.isEmpty(this.params) ? '' : '?';
     if (this.isNew() && Est.isEmpty(this.id)) return base + sep + this.params;
     _url = base + (base.charAt(base.length - 1) == '/' ? '' : '/') + this.id + sep + this.params;
-    debug(function () {
+    debug(function() {
       return ('[Query]' + _url);
-    });//debug__
+    }); //debug__
     return _url;
   },
   /**
@@ -47,9 +47,9 @@ var BaseModel = Backbone.Model.extend({
    * @example
    *      this._initialize();
    */
-  _initialize: function (options) {
+  _initialize: function(options) {
     this.validateMsg = null;
-    debug('9.BaseModel._initialize ' + this.baseId);//debug__
+    debug('9.BaseModel._initialize ' + this.baseId); //debug__
   },
   /**
    * 过滤结果, 并提示信息对话框, 若不想提示信息可以设置hideTip为true
@@ -79,18 +79,19 @@ var BaseModel = Backbone.Model.extend({
    * @return {*}
    * @author wyj 14.11.16
    */
-  parse: function (response, options) {
-    var ctx = this, buttons = [],
+  parse: function(response, options) {
+    var ctx = this,
+      buttons = [],
       _isNew = false;
     if ('msg' in response) BaseUtils.removeLoading();
     if (Est.isEmpty(response)) {
       var url = Est.typeOf(this.url) === 'function' ? this.url() : this.url;
-      debug('Error25 url' + url);//debug__
+      debug('Error25 url' + url); //debug__
       BaseUtils.tip(CONST.LANG.REQUIRE_FAILED);
       return false;
     }
-    if (response && response.msg && response.msg === CONST.LANG.AUTH_FAILED){
-      BaseUtils.tip(CONST.LANG.AUTH_LIMIT, {time: 2000});
+    if (response && response.msg && response.msg === CONST.LANG.AUTH_FAILED) {
+      BaseUtils.tip(CONST.LANG.AUTH_LIMIT, { time: 2000 });
     }
     if (response.msg === CONST.LANG.NOT_LOGIN && !this.stopCheckLogin) {
       Est.trigger('checkLogin');
@@ -102,32 +103,41 @@ var BaseModel = Backbone.Model.extend({
     if (response.msg && !this.hideTip) {
       if (response.success) {
         if (ctx.isNew() && !this.autoHide && !this.hideAddBtn) {
-          buttons.push({ value: CONST.LANG.ADD_CONTINUE, callback: function () {
-            ctx.set('id', null);
-            ctx.set(ctx.baseId, null);
-          }});
-          _isNew = true;
-        }
-        !this.hideOkBtn && buttons.push({ value: CONST.LANG.CONFIRM, callback: function () {
-          Est.trigger('_dialog_submit_callback');
-          this.autoBack = Est.typeOf(this.autoBack) === 'undefined' ? true : this.autoBack;
-          if (typeof window.topDialog != 'undefined') {
-            window.topDialog.close(); // 关键性语句
-            window.topDialog = null;
-            $ && this.autoBack && $(".btn-back").click();
-          } else if (app.getDialogs().length > 0) {
-            try {
-              app.getDialogs().pop().close().remove();
-              $ && this.autoBack && $(".btn-back").click();
-            } catch (e) {
+          buttons.push({
+            value: CONST.LANG.ADD_CONTINUE,
+            callback: function() {
+              ctx.set('id', null);
+              ctx.set(ctx.baseId, null);
             }
-          }
-          this.close();
-        }, autofocus: true });
+          });
+          _isNew = true;
+        }!this.hideOkBtn && buttons.push({
+          value: CONST.LANG.CONFIRM,
+          callback: function() {
+            Est.trigger('_dialog_submit_callback');
+            this.autoBack = Est.typeOf(this.autoBack) === 'undefined' ? true : this.autoBack;
+            if (typeof window.topDialog != 'undefined') {
+              window.topDialog.close(); // 关键性语句
+              window.topDialog = null;
+              $ && this.autoBack && $(".btn-back").click();
+            } else if (app.getDialogs().length > 0) {
+              try {
+                app.getDialogs().pop().close().remove();
+                $ && this.autoBack && $(".btn-back").click();
+              } catch (e) {}
+            }
+            this.close();
+          },
+          autofocus: true
+        });
       } else {
-        buttons.push({ value: CONST.LANG.CONFIRM, callback: function () {
-          this.close();
-        }, autofocus: true });
+        buttons.push({
+          value: CONST.LANG.CONFIRM,
+          callback: function() {
+            this.close();
+          },
+          autofocus: true
+        });
       }
       this.hideOkBtn && Est.trigger('_dialog_submit_callback');
       var dialog_msg = BaseUtils.dialog({
@@ -137,9 +147,9 @@ var BaseModel = Backbone.Model.extend({
         width: 250,
         button: buttons
       });
-      setTimeout(function () {
+      setTimeout(function() {
         app.getDialog('dialog_msg') && (ctx.autoHide || !_isNew) &&
-        app.getDialog('dialog_msg').close().remove();
+          app.getDialog('dialog_msg').close().remove();
       }, 2000);
     }
     // 当success为false时， 直接返回服务器错误的response信息
@@ -151,7 +161,7 @@ var BaseModel = Backbone.Model.extend({
     if (response.attributes && response.attributes.data) {
       var keys = Est.keys(response.attributes);
       if (keys.length > 1) {
-        Est.each(keys, function (item) {
+        Est.each(keys, function(item) {
           if (item !== 'data')
             response.attributes['data'][item] = response.attributes[item];
         });
@@ -176,16 +186,16 @@ var BaseModel = Backbone.Model.extend({
    * @author wyj 14.11.16
    * @example
    *        this.model._saveField({
-       *          id: thisNode.get('id'),
-       *          sort: thisNode.get('sort')
-       *        }, ctx, { // ctx须初始化initModel
-       *          success: function(){}, // 保存成功回调
-       *          async: false, // 是否同步
-       *          hideTip: false // 是否隐藏提示
-       *          hideOkBtn: false // 是否隐藏确定按钮
-       *        });
+   *          id: thisNode.get('id'),
+   *          sort: thisNode.get('sort')
+   *        }, ctx, { // ctx须初始化initModel
+   *          success: function(){}, // 保存成功回调
+   *          async: false, // 是否同步
+   *          hideTip: false // 是否隐藏提示
+   *          hideOkBtn: false // 是否隐藏确定按钮
+   *        });
    */
-  _saveField: function (keyValue, ctx, options) {
+  _saveField: function(keyValue, ctx, options) {
     var wait = options.async || true;
     var newModel = new ctx.initModel({
       id: keyValue.id || ctx.model.get('id')
@@ -196,21 +206,22 @@ var BaseModel = Backbone.Model.extend({
     if (options.hideTip) newModel.hideTip = true;
     newModel.hideOkBtn = true;
     newModel.set('editField', true);
-    debug(function () {
+    debug(function() {
       if (!newModel.baseUrl) return 'Error27';
-    }, {type: 'console'});//debug__
+    }, { type: 'console' }); //debug__
     if (newModel.baseUrl) {
       newModel.save(null, {
-        success: function (model, result) {
+        success: function(model, result) {
           if (result.msg === CONST.LANG.NOT_LOGIN && !this.stopCheckLogin) {
             Est.trigger('checkLogin');
           }
           if (typeof options.success != 'undefined') {
             options.success && options.success.call(ctx, keyValue, result);
           }
-        }, wait: wait
+        },
+        wait: wait
       });
-    } else{
+    } else {
       options.success && options.success.call(ctx, keyValue, {});
     }
   },
@@ -222,8 +233,8 @@ var BaseModel = Backbone.Model.extend({
    * @return {*}
    * @author wyj 14.12.18
    */
-  _getChildren: function (collection) {
-    return Est.map(this.get('children'), function (ref) {
+  _getChildren: function(collection) {
+    return Est.map(this.get('children'), function(ref) {
       // Lookup by ID in parent collection if string/num
       if (typeof(ref) == 'string' || typeof(ref) == 'number')
         return collection.get(ref);
@@ -239,7 +250,7 @@ var BaseModel = Backbone.Model.extend({
    * @example
    *      this.model._hideTip();
    */
-  _hideTip: function () {
+  _hideTip: function() {
     this.hideTip = true;
   },
   /**
@@ -250,7 +261,7 @@ var BaseModel = Backbone.Model.extend({
    * @example
    *      this.model._toggle();
    */
-  _toggle: function () {
+  _toggle: function() {
     this.set('checked', !this.get('checked'));
   },
   /**
@@ -262,14 +273,14 @@ var BaseModel = Backbone.Model.extend({
    * @author wyj 14.11.21
    * @example
    *        validate: function (attrs) {
-       *          return this._validation(attrs, function (attrs) {
-       *            if (!attrs.sort || attrs.sort < 0) {
-       *            this.validateMsg = "sort不能为空";
-       *          }
-       *         });
-       *        }
+   *          return this._validation(attrs, function (attrs) {
+   *            if (!attrs.sort || attrs.sort < 0) {
+   *            this.validateMsg = "sort不能为空";
+   *          }
+   *         });
+   *        }
    */
-  _validation: function (attributes, callback) {
+  _validation: function(attributes, callback) {
     if (!attributes.silent && callback) {
       callback.call(this, attributes);
     }
@@ -284,7 +295,7 @@ var BaseModel = Backbone.Model.extend({
    * @example
    *      this._getValue('tip.name');
    */
-  _getValue: function (path) {
+  _getValue: function(path) {
     return Est.getValue(this.attributes, path);
   },
   /**
@@ -297,10 +308,10 @@ var BaseModel = Backbone.Model.extend({
    * @example
    *      this._setValue('tip.name', 'aaa');
    */
-  _setValue: function (path, val) {
+  _setValue: function(path, val) {
     Est.setValue(this.attributes, path, val);
   },
-  initialize: function () {
+  initialize: function() {
     this._initialize();
   }
 });

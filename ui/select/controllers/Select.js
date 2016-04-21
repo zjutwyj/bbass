@@ -27,7 +27,12 @@ define('Select', [], function(require, exports, module) {
       this.model.attributes.text = this.model.get(this._options.data.text);
       this.model.attributes.value = this.model.get(this._options.data.value);
       this.model.on('autoSelectNode', this.autoSelectNode, this);
-      if (this._options.data.inputValue &&
+      if (Est.typeOf(this._options.data.inputValue) === 'number' && this._options.data.inputValue === this.model.get('value')) {
+        setTimeout(Est.proxy(function() {
+          this.selectItem(false);
+        }, this), 0);
+      }
+      if (Est.typeOf(this._options.data.inputValue) === 'string' && this._options.data.inputValue &&
         this._options.data.inputValue.indexOf(this.model.get('value')) !== -1) {
         setTimeout(Est.proxy(function() {
           this.selectItem(false);
@@ -276,7 +281,7 @@ define('Select', [], function(require, exports, module) {
       if (!items) return;
       var id = this._options.cur || $(this._options.target).val();
       Est.each(items, function(item) {
-        if (((item[this._options.value] + '') === id) || (Est.isEmpty(item[this._options.value]) && Est.isEmpty(id))) {
+        if (((item[this._options.value] + '') === (id + '')) || (Est.isEmpty(item[this._options.value]) && Est.isEmpty(id))) {
           this.$('.bui-select-input').val(Est.trim(item[this._options.text]).replace('|-', ''));
           //if (!this.initRender)
           if (this._options.onChange)

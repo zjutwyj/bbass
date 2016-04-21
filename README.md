@@ -4,7 +4,7 @@ var Module = BaseView.extend({
 
   // 组件初始化
   initialize: fucntion  (){
-    this._initialize({
+    this._super({
 
       // 通用部分
       template: template, // 字符串模板
@@ -72,7 +72,7 @@ var Module = BaseView.extend({
     });
   },
 
-  // 数据载入前(主要用于BaseList组件中)
+  // 数据载入前(主要用于BaseList与BaseDetail组件中)
   beforeLoad: function(){},
 
   // 数据载入后
@@ -116,7 +116,7 @@ this._region('imagePickerConfig', ImagePickerConfig, {
 ```html
 <div class=".bind" bb-watch="args.name" bb-render=".bind:style" bb-change="handleChange" style="display: {{#compare args.name '===' 'show'}}block;{{else}}none;{{/compare}}"></div>
 ```
->bb-watch:  监听的字段，多个字段以逗号隔开(当只要渲染当前元素时， 可以使用bb-watch="args.name:style"简写)<br>
+>bb-watch:  监听的字段，多个字段以逗号隔开(当只要渲染当前元素时， 可以使用bb-watch="args.name:style"简写,多个字段以逗号隔开，错误写法bb-watch="args.name,args.color:style:html",正确写法：bb-watch="args.name:style,args.color:html")<br>
 bb-render: 需要重新渲染的元素或属性，后面带:style(样式) :class(属性) :html(内容) :value(表单)若不带则整个dom替换掉
            当同一个元素带多个属性时，可简写为.bind:style:html:class<br>
 bb-change: 事件函数(其中参数为改变的字段名称)<br>
@@ -153,12 +153,14 @@ bb-click="_save": 保存表单(当需要实时保存且不需要提示“保存�
 ```js
 bb-checked="checked": 是否选中
 bb-checked="checked_all": 是否全部选中
+bb-checked="result_none": 列表是否为空
 ```
 ### 组件通用方法
 ```js
-this._super(type); // 引用父类，当参数type为view时返回上级视图 model时返回上级模型类，data上级模型类数据
+this._super(type); // 引用父类，当参数type为view时返回上级视图 model时返回上级模型类，data上级模型类数据,"_init" 执行上级方法,对象时调用父级的_initialize()方法
 this._view('viewId');// 获取视图
 this._region('name', ProductList, {}); // 添加视图区域
+this._service('productList').then(function(){}); // 数据请求服务
 this._navigate('#/home', true); // 导航
 this._dialog({}); // 模块对话框
 this._watch('color', '.render:style', function(fieldName){}); // 数据监听
@@ -169,11 +171,13 @@ this._getOption('itemId');// 获取组件参数
 this._getTpl(); // 获取模板字符串
 this._getTarget(e); // 获取鼠标点击时的那个元素
 this._getEventTarget(e); // 获取添加事件的那个元素
+this._getPath(this._get('args.color'), 'args.'); // 获取路径(第二个参数为前缀)
 this._one(['ProductList'], function(ProductList){}); // 只执行单次，当第一个参数为数组时，则为require这个模块
 this._require(['ProductList'], function(ProductList){}); // 请求模块
 this._delay(function(){}, 5000); // 延迟执行
 this._bind(function(){}); // 绑定上下文
 this._initToolTip(parentNode, className); // 添加提示
+this._close(); // 关闭对话框
 ```
 ### 操作模型类
 ```js
@@ -310,4 +314,4 @@ new BaseService().factory({
 [图片切换(swiper)](http://idangero.us/swiper/get-started) ["Swiper"]<br>
 [百度编辑器(ueditor)](http://ueditor.baidu.com/website/) ["Ueditor"]<br>
 [图片上传(fileupload)](https://blueimp.github.io/jQuery-File-Upload/) ["FileUpload"]<br>
-[移动端元素选择器(zepto](http://www.zeptojs.cn/)<br>
+[移动端元素选择器(zepto)](http://www.zeptojs.cn/)<br>

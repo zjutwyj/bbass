@@ -391,8 +391,8 @@ var BaseItem = SuperView.extend({
     }
     //TODO 如果
     if (Est.typeOf(e) !== 'boolean' && e)
-      //e.stopImmediatePropagation();
-    Est.trigger(this.cid + 'checked', 'checked');
+    //e.stopImmediatePropagation();
+      Est.trigger(this.cid + 'checked', 'checked');
     if (!this._get('checked')) {
       checked_all = false;
     } else {
@@ -417,6 +417,7 @@ var BaseItem = SuperView.extend({
    *        });
    */
   _itemActive: function(options, e) {
+    var _class = null;
     options = options || {};
     if (!app.getData('itemActiveList' + this._options.viewId))
       app.addData('itemActiveList' + this._options.viewId, []);
@@ -432,7 +433,12 @@ var BaseItem = SuperView.extend({
     if (Est.typeOf(e) === 'boolean' && !e) return;
     this.$el.addClass('item-active');
 
-    list.push(this.$el.attr('class').replace(/^.*(_item_el_.+?)\s+.*$/g, "$1"));
+    _class = this.$el.attr('class').replace(/^.*(_item_el_.+?)\s+.*$/g, "$1");
+    if (Est.findIndex(list, function(item) {
+        return item === _class;
+      }) === -1) {
+      list.push(_class);
+    }
   },
   /**
    * 上移
@@ -488,6 +494,23 @@ var BaseItem = SuperView.extend({
       },
       hideTip: true
     });
+  },
+  /**
+   * 保存模型类
+   * @method _save
+   * @return {[type]} [description]
+   */
+  _save: function() {
+    if (this.model.attributes._response) {
+      delete this.model.attributes._response;
+    }
+    if (this.beforeSave){
+      this.beforeSave.call(this);
+    }
+    this.model.save();
+    if (this.afterSave){
+      this.afterSave.call(this);
+    }
   },
   /**
    * 获取当前列表第几页

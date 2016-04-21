@@ -384,6 +384,7 @@ var BaseList = SuperView.extend({
         ctx.list.find('.no-result').remove();
         try {
           if (Est.isEmpty(result) || Est.isEmpty(result.attributes) || result.attributes.data.length === 0) {
+            ctx._set('result_none', true);
             ctx._options.append ? ctx.list.append('<div class="no-result">' + CONST.LANG.LOAD_ALL + '</div>') :
               ctx.list.append('<div class="no-result">' + CONST.LANG.NO_RESULT + '</div>');
 
@@ -583,7 +584,7 @@ var BaseList = SuperView.extend({
         _children = [];
       while (i > 0) {
         var item = temp[i - 1];
-        if (item.belongId === thisModel.get(ctx._options.categoryId)) {
+        if ((item.belongId + '') === (thisModel.get(ctx._options.categoryId) + '')) {
           _children.unshift(item.categoryId);
           temp.splice(i - 1, 1);
         }
@@ -616,10 +617,12 @@ var BaseList = SuperView.extend({
         }, this));
       } else if (thisModel.get(ctx._options.rootId) === ctx._options.rootValue) {
         thisModel.set('level', 1);
+        thisModel.set('isroot', '01');
         roots.push(thisModel);
       }
     });
     Est.each(roots, function(model) {
+      model.set('isroot', '01');
       ctx._addOne(model);
     });
   },
@@ -713,6 +716,10 @@ var BaseList = SuperView.extend({
     }
     this._resetDx();
     this._setValue('checked_all', false);
+
+    if (this._get('result_none')) {
+      this.list.find('.no-result').remove();
+    }
   },
   /**
    * 通过索引值获取当前视图的jquery对象
@@ -1055,6 +1062,16 @@ var BaseList = SuperView.extend({
       hideTip: true
     });
   },
+  _saveSorts: function(model, args) {
+    var sortOpt = {
+      id: model.get('id')
+    };
+    sortOpt.sorts = args;
+    model._saveField(sortOpt, this, {
+      async: false,
+      hideTip: true
+    });
+  },
   /**
    * 插序 常用于sortable
    *
@@ -1185,8 +1202,12 @@ var BaseList = SuperView.extend({
       path: this._options.sortField || 'sort',
       success: function(thisNode, nextNode) {
         if (thisNode.get('id') && nextNode.get('id')) {
-          this._saveSort(thisNode);
-          this._saveSort(nextNode);
+          //this._saveSort(thisNode);
+          //this._saveSort(nextNode);
+          this._saveSorts(thisNode, {
+            ids: thisNode.get('id') + ',' + nextNode.get('id'),
+            sorts: thisNode.get(this._options.sortField || 'sort') + ',' + nextNode.get(this._options.sortField || 'sort')
+          });
           thisNode.stopCollapse = false;
           nextNode.stopCollapse = false;
         } else {
@@ -1230,8 +1251,12 @@ var BaseList = SuperView.extend({
       path: this._options.sortField,
       success: function(thisNode, nextNode) {
         if (thisNode.get('id') && nextNode.get('id')) {
-          this._saveSort(thisNode);
-          this._saveSort(nextNode);
+          //this._saveSort(thisNode);
+          //this._saveSort(nextNode);
+          this._saveSorts(thisNode, {
+            ids: thisNode.get('id') + ',' + nextNode.get('id'),
+            sorts: thisNode.get(this._options.sortField || 'sort') + ',' + nextNode.get(this._options.sortField || 'sort')
+          });
           thisNode.stopCollapse = false;
           nextNode.stopCollapse = false;
         } else {
