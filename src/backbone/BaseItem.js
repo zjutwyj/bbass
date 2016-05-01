@@ -138,11 +138,13 @@ var BaseItem = SuperView.extend({
       var item_id = this.model.get('id') ? (this.model.get('id') + '') : (this.model.get('dx') + 1 + '');
       if (this.model.get('dx') % 2 === 0) this.$el.addClass('bui-grid-row-even');
       this.$el.addClass('_item_el_' + (this._options.viewId || '') + '_' + item_id.replace(/^[^1-9]+/, ""));
-      this.$el.hover(function() {
-        $(this).addClass('hover');
-      }, function() {
-        $(this).removeClass('hover');
-      });
+      if (this.$el.hover) {
+        this.$el.hover(function() {
+          $(this).addClass('hover');
+        }, function() {
+          $(this).removeClass('hover');
+        });
+      }
     }
   },
   /**
@@ -153,16 +155,15 @@ var BaseItem = SuperView.extend({
    * @author wyj 14.11.18
    */
   _render: function() {
-    debug('10.BaseItem._render'); //debug__
     this._onBeforeRender();
     if (this._options && this._options.filter)
       this._options.filter.call(this, this.model);
-    //TODO 添加判断是否存在this.$el debug
+    // 添加判断是否存在this.$el debug
     //debug('BaseItem里的this.$el为空， 检查document中是否存在， 或设置传入的options.el为jquery对象(有时是DOM片段)', {type: 'error'});
     this.$el.html(this.template ? this.template(this.model.attributes) :
       this._options.viewId && app.getCompileTemp(this._options.viewId) && app.getCompileTemp(this._options.viewId)(this.model.attributes));
-    if (this._options.modelBind) this._modelBind();
-    //TODO 判断是否存在子元素
+    this._onAfterRender();
+    // 判断是否存在子元素
     var modelOptions = this.model.get('_options');
     if (modelOptions && modelOptions._subRender && this.model.get('children') &&
 
@@ -178,16 +179,6 @@ var BaseItem = SuperView.extend({
       Est.each(this.model._getChildren(modelOptions._collection), function(newmodel) {
         var childView = null;
 
-        /*if (modelOptions._items) {
-          newmodel = new modelOptions._model(newmodel);
-        }*/
-        debug(function() {
-          if (Est.isEmpty(newmodel)) {
-            return 'Error20';
-          }
-        }, {
-          type: 'error'
-        }); //debug__
         newmodel.set('_options', modelOptions);
         newmodel.set('level', level + 1);
 
@@ -214,7 +205,7 @@ var BaseItem = SuperView.extend({
         //childView.$el.addClass('last-item').before($('<li/>').addClass('dummy-item'));
       }
     }
-    this._onAfterRender();
+
     return this;
   },
   /**
@@ -296,6 +287,7 @@ var BaseItem = SuperView.extend({
    * @author wyj 14.12.3
    */
   _onAfterRender: function() {
+    if (this._options.modelBind) this._modelBind();
     if (this._options.toolTip) this._initToolTip();
     if (this.afterRender) this.afterRender.call(this, this.model);
     if (this._watchBind) this._watchBind.call(this, this._options.template);
@@ -309,7 +301,6 @@ var BaseItem = SuperView.extend({
    * @author wyj 14.11.16
    */
   _close: function() {
-    debug('BaseItem._close'); //debug__
     this.stopListening();
   },
   /**
@@ -320,7 +311,6 @@ var BaseItem = SuperView.extend({
    * @author wyj 14.11.16
    */
   _clear: function() {
-    debug('ProductItem._clear'); //debug__
     this.model.destroy();
   },
   /**
@@ -352,10 +342,6 @@ var BaseItem = SuperView.extend({
       if (this._options.viewId) {
         if (app.getView(this._options.viewId))
           app.getView(this._options.viewId)._clearChecked();
-      } else {
-        debug('Error21', {
-          type: 'error'
-        }); //debug__
       }
     }
 
@@ -423,7 +409,6 @@ var BaseItem = SuperView.extend({
       app.addData('itemActiveList' + this._options.viewId, []);
     var list = app.getData('itemActiveList' + this._options.viewId);
     if (!options.add) {
-      debug('BaseItem._itemActive'); //debug__
       Est.each(list, Est.proxy(function(selecter) {
         $('.' + selecter, app.getView(this._options.viewId) ?
           app.getView(this._options.viewId).$el : $("body")).removeClass('item-active');
@@ -451,9 +436,6 @@ var BaseItem = SuperView.extend({
     e.stopImmediatePropagation();
     this.collapsed = true;
     if (!this._options.viewId) {
-      debug('Error22', {
-        type: 'error'
-      }); //debug__
       return false;
     }
     app.getView(this._options.viewId)._moveUp(this.model);
@@ -469,9 +451,6 @@ var BaseItem = SuperView.extend({
     e.stopImmediatePropagation();
     this.collapsed = true;
     if (!this._options.viewId) {
-      debug('Error23', {
-        type: 'error'
-      }); //debug__
       return false;
     }
     app.getView(this._options.viewId)._moveDown(this.model);
@@ -492,6 +471,9 @@ var BaseItem = SuperView.extend({
       success: function() {
         ctx.model.set('sort', sort);
       },
+      fail: function(){
+
+      },
       hideTip: true
     });
   },
@@ -501,16 +483,18 @@ var BaseItem = SuperView.extend({
    * @return {[type]} [description]
    */
   _save: function() {
-    if (this.model.attributes._response) {
-      delete this.model.attributes._response;
-    }
-    if (this.beforeSave){
-      this.beforeSave.call(this);
-    }
-    this.model.save();
-    if (this.afterSave){
-      this.afterSave.call(this);
-    }
+    if (this.model.attributes._response) delete this.model.attributes._response;
+    if (this.beforeSave) this.beforeSave.call(this);
+    this.model.save({}, {
+      wait: true,
+      success: function(model, response) {
+        BaseUtils.tip(CONST.LANG.SAVE_SUCCESS);
+      },
+      error: function(model, error) {
+        BaseUtils.tip(CONST.LANG.SAVE_ERROR);
+      }
+    });
+    if (this.afterSave) this.afterSave.call(this);
   },
   /**
    * 获取当前列表第几页
@@ -534,7 +518,6 @@ var BaseItem = SuperView.extend({
   _del: function(e, callback) {
     if (e)
       e.stopImmediatePropagation();
-    debug('1.BaseItem._del'); //debug__
     var context = this;
     if (app.getData('delItemDialog')) app.getData('delItemDialog').close();
     if (context.model.get('children').length > 0) {
@@ -580,6 +563,22 @@ var BaseItem = SuperView.extend({
     }));
   },
   /**
+   * 直接移除，不提示
+   * @method _remove
+   * @param  {[type]}   e        [description]
+   * @param  {Function} callback [description]
+   * @return {[type]}            [description]
+   */
+  _remove: function(e, callback) {
+    this.model.destroy({
+      wait: true,
+      success: this._bind(function() {
+        this._removeFromItems(this.model.get('dx'));
+        if (callback) callback.call(this);
+      })
+    });
+  },
+  /**
    * 从this._options.items中通过dx移除元素
    * @method [集合] - _removeFromItems
    * @param dx
@@ -589,6 +588,7 @@ var BaseItem = SuperView.extend({
    *      this._removeFromItems(context.model.get('dx'));
    */
   _removeFromItems: function(dx) {
+    Est.trigger(this._super('view').cid + 'models');
     if (Est.typeOf(dx) === 'undefined') return;
     if (app.getView(this._options.viewId)) {
       if (app.getView(this._options.viewId)._options.items)

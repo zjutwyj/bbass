@@ -11,10 +11,7 @@
       // others that may still expect a global Backbone.
       root.Backbone = factory(root, exports, Est, $);
     });
-  } else if (typeof exports !== "undefined") {
-    var Est = require("Est");
-    factory(root, exports, Est, root.jQuery);
-  } else {
+  }  else {
     root.Backbone = factory(root, {}, root.Est, root.jQuery || root.Zepto || root.ender || root.$);
   }
 })(this, function(root, Backbone, _, $) {
@@ -262,9 +259,11 @@
     // Return a copy of the model's `attributes` object.
     toJSON: function(options) {
       var result = _.cloneDeep(this.attributes);
+      // 新版将重构
       delete result.CONST;
       delete result._data;
       delete result._isAdd;
+      delete result.models;
       if (_.typeOf(options) !== 'boolean'){
         delete result.checked;
         delete result.checked_all;
@@ -604,7 +603,8 @@
     // Add a model, or list of models to the set.
     add: function(models, options) {
       return this.set(models, _.extend({
-        merge: false
+        merge: false,
+        sets: true
       }, options, addOptions));
     },
     // Remove a model, or a list of models from the set.
@@ -648,6 +648,14 @@
       var order = !sortable && add && remove ? [] : false;
       // Turn bare objects into model references, and prevent invalid models
       // from being added.
+      if (this.options.diff && !options.sets) {
+        for (i = 0, l = models.length; i < l; i++) {
+          attrs = models[i] || {};
+          models[i].id = attrs[targetModel.prototype.baseId || "id"];
+        }
+        this._super('view')._setModels(models);
+        return;
+      }
       for (i = 0, l = models.length; i < l; i++) {
         attrs = models[i] || {};
         if (attrs instanceof Model) {
@@ -1073,6 +1081,7 @@
       delete _attrs.checked_all;
       delete _attrs.children;
       delete _attrs._options;
+      delete _attrs.models;
       params.data = JSON.stringify(options.attrs || _attrs);
     }
     // For older servers, emulate JSON by encoding the request into an HTML-form.

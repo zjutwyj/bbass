@@ -355,9 +355,6 @@ Est.extend(BaseApp.prototype, {
    *      app.addData('productList', productList);
    */
   addData: function(name, data) {
-    if (name in this.data) {
-      debug('reset data ' + name); //debug__
-    }
     this.data[name] = data;
   },
   /**
@@ -385,9 +382,6 @@ Est.extend(BaseApp.prototype, {
    *        app.addModule('ProductList', '/modules/product/controllers/ProductList.js');
    */
   addModule: function(name, val) {
-    if (name in this.modules) {
-      debug('Error10 module=' + name); //debug__
-    }
     this.modules[name] = val;
   },
   /**
@@ -416,9 +410,6 @@ Est.extend(BaseApp.prototype, {
    *      });
    */
   addRoute: function(name, fn) {
-    if (name in this.routes) {
-      debug('Error13 ' + name); //debug__
-    }
     this.routes[name] = fn;
   },
   /**
@@ -445,9 +436,6 @@ Est.extend(BaseApp.prototype, {
             });
    */
   addTemplate: function(name, fn) {
-    if (name in this.templates) {
-      debug('Error11 template name:' + name);
-    }
     this.templates[name] = fn;
   },
   /**
@@ -479,7 +467,7 @@ Est.extend(BaseApp.prototype, {
       var sessionId = Est.typeOf(isSession) === 'undefined' ? '' : isSession ? this.data.sessionId : '';
       localStorage['___JHW_BACKBONE__' + Est.hash(sessionId + name)] = value;
     } catch (e) {
-      debug('Error9 ' + e); //debug__
+      console.log('Error9 ' + e); //debug__
     }
     return value;
   },
@@ -693,3 +681,4 @@ Est.extend(BaseApp.prototype, {
     return this.cookies;
   }
 });
+window.app = window.app || new BaseApp({});

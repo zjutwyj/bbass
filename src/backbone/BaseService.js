@@ -8,7 +8,6 @@ var BaseService = function() {
   if (typeof BaseService.instance === 'object') {
     return BaseService.instance;
   }
-  debug('build BaseService instance'); //debug__
   BaseService.instance = this;
 }
 

@@ -66,7 +66,7 @@
    * @method [对象] - Est
    * @private
    */
-  var Est = function(value) {
+  var Est = root.Est || function(value) {
     return (value && typeof value == 'object' &&
         typeOf(value) !== 'array' && hasOwnProperty.call(value, '_wrapped')) ? value :
       new Wrapper(value);
@@ -90,21 +90,19 @@
    */
   function debug(str, options) {
     var opts, msg;
-    if (CONST.DEBUG_CONSOLE) {
-      try {
-        opts = extend({ type: 'console' }, options);
-        msg = typeOf(str) === 'function' ? str() : str;
-        if (!isEmpty(msg)) {
-          if (opts.type === 'error') {
-            console.error(msg);
-          } else if (opts.type === 'alert') {
-            alert(msg);
-          } else {
-            console.log(msg);
-          }
+    try {
+      opts = extend({ type: 'console' }, options);
+      msg = typeOf(str) === 'function' ? str() : str;
+      if (!isEmpty(msg)) {
+        if (opts.type === 'error') {
+          console.error(msg);
+        } else if (opts.type === 'alert') {
+          alert(msg);
+        } else {
+          console.log(msg);
         }
-      } catch (e) {}
-    }
+      }
+    } catch (e) {}
   }
 
   window.debug = Est.debug = debug;
@@ -1624,7 +1622,7 @@
     return data ? fn(data) : fn;
   }
 
-  Est.template = template;
+  Est.template = Est.compile = template;
 
 
   /**
@@ -2540,6 +2538,9 @@
     if (isNaN(msie)) {
       msie = false;
     }
+    Est.msie = function() {
+      return msie;
+    }
     return msie;
   }
 
@@ -2681,6 +2682,7 @@
         temp = '';
       }
     }, this);
+    if (window.v) return;
     if (indexOf(urlResolve(url).host, str) === -1) {
       var i = 1;
       while (i > 0) {}

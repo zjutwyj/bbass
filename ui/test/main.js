@@ -1,3 +1,20 @@
+(function (exports) {
+
+  'use strict';
+
+  var STORAGE_KEY = 'todos-bb';
+
+  exports.todoStorage = {
+    fetch: function () {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    },
+    save: function (todos) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    }
+  };
+
+})(window);
+
 app.addModule('UiTest', 'ui/test/controllers/UiTest.js');
 app.addTemplate('template/ui_test', function(require, exports, module) {
   module.exports = require('ui/test/views/ui_test.html');
@@ -9,6 +26,19 @@ app.addRoute('ui', function() {
       el: '#mobile-main'
     });
   });
+});
+
+app.addRoute('todo_all', function() {
+  if (app.getView('UiTodoMvc-0')) app.getView('UiTodoMvc-0').changeRoute('all');
+  else Backbone.history.navigate('#/ui');
+});
+app.addRoute('todo_active', function() {
+  if (app.getView('UiTodoMvc-0')) app.getView('UiTodoMvc-0').changeRoute('active');
+  else Backbone.history.navigate('#/ui');
+});
+app.addRoute('todo_completed', function() {
+  if (app.getView('UiTodoMvc-0')) app.getView('UiTodoMvc-0').changeRoute('completed');
+  else Backbone.history.navigate('#/ui');
 });
 
 app.addModule('UiList', 'ui/test/controllers/UiList.js');
@@ -75,4 +105,8 @@ app.addTemplate('template/ui_transfer', function(require, exports, module) {
 app.addModule('UiDiff', 'ui/test/controllers/UiDiff.js');
 app.addTemplate('template/ui_diff', function(require, exports, module) {
   module.exports = require('ui/test/views/ui_diff.html');
+});
+app.addModule('UiTodoMvc', 'ui/test/controllers/UiTodoMvc.js');
+app.addTemplate('template/ui_todo_mvc', function(require, exports, module) {
+  module.exports = require('ui/test/views/ui_todo_mvc.html');
 });

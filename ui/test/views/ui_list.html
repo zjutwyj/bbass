@@ -19,7 +19,7 @@
 }
 </style>
 <div class="form" id="list-test" style="background: #fff;padding: 20px;">
-<label class="checkAll"><input bb-click="_checkAll" type="checkbox" bb-checked="checked_all"/>全选111</label>&nbsp;&nbsp;&nbsp;&nbsp;
+<label class="checkAll"><input bb-click="_checkAll" type="checkbox" bb-checked="checked_all" />全选<span bb-watch="models:html">({{models.length}})</span></label>&nbsp;&nbsp;&nbsp;&nbsp;
   <a href="javascript:;" bb-click="addOne">插入到末尾</a>&nbsp;&nbsp;&nbsp;&nbsp;
   <a href="javascript:;" bb-click="insertOne">插入到第1个元素</a>&nbsp;&nbsp;&nbsp;&nbsp;
   <a href="javascript:;" bb-click="insertThree">第3个元素</a>&nbsp;&nbsp;&nbsp;&nbsp;

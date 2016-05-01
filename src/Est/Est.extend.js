@@ -1015,29 +1015,6 @@ Est.mixin({
     return totalCount > pageSize ? Math.ceil(totalCount / pageSize) : 1;
   },
   /**
-   * 快速排序算法
-   * @method quickSort
-   * @param  {[type]} arr [description]
-   * @return {[type]}     [description]
-   */
-  quickSort: function(arr){
-    if (arr.length <=1) {
-      return arr;
-    }
-    var pivotIndex = Math.floor(arr.length /2);
-    var pivot = arr.splice(pivotIndex, 1)[0];
-    var left = [];
-    var right = [];
-    for(var i = 0;i<arr.length;i++){
-      if (arr[i]<pivot){
-        left.push(arr[i]);
-      } else{
-        right.push(arr[i]);
-      }
-    }
-    return Est.quickSort(left).concat([pivot], Est.quickSort(right));
-  },
-    /**
    * Debounce a function so it only gets called after the
    * input stops arriving after the given wait period.
    *
@@ -1046,7 +1023,7 @@ Est.mixin({
    * @return {Function} - the debounced function
    */
 
-  _debounce function(func, wait) {
+  _debounce: function(func, wait) {
     var timeout, args, context, timestamp, result;
     var later = function later() {
       var last = Date.now() - timestamp;
@@ -1058,7 +1035,7 @@ Est.mixin({
         if (!timeout) context = args = null;
       }
     };
-    return function () {
+    return function() {
       context = this;
       args = arguments;
       timestamp = Date.now();
@@ -1067,5 +1044,54 @@ Est.mixin({
       }
       return result;
     };
+  },
+  /**
+   * 快速排序算法
+   * @method quickSort
+   * @param  {[type]} arr [description]
+   * @return {[type]}     [description]
+   */
+  quickSort: function(arr) {
+    if (arr.length <= 1) {
+      return arr;
+    }
+    var pivotIndex = Math.floor(arr.length / 2);
+    var pivot = arr.splice(pivotIndex, 1)[0];
+    var left = [];
+    var right = [];
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i] < pivot) {
+        left.push(arr[i]);
+      } else {
+        right.push(arr[i]);
+      }
+    }
+    return Est.quickSort(left).concat([pivot], Est.quickSort(right));
+  },
+  swap: function(arr, i, j) {
+    arr[i] = [arr[j], arr[j] = arr[i]][0]
+      /*var temp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = temp;*/
+  },
+  bubbleSort: function(arr, start, end) {
+    var start = start || 0;
+    var end = end || arr.length;
+    var exchange = true;
+
+    if (!arr || arr.length <= 1) {
+      return arr;
+    }
+    for (var i = 0; i < end - 1; i++) {
+      for (var j = end - 1; j > i; j--) {
+        if (arr[j] < arr[j - 1]) {
+          Est.swap(arr, j, j - 1);
+          exchange = false;
+        }
+      }
+      if (exchange) {
+        return;
+      }
+    }
   }
 });

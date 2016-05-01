@@ -113,6 +113,7 @@ var BaseView = SuperView.extend({
     if (this._watchBind) this._watchBind.call(this, this._options.template);
     if (this._bbBind) this._bbBind.call(this, this._options.template, this.$el);
     if (this._options.toolTip) this._initToolTip();
+
     this._initEnterEvent(this._options);
     BaseUtils.removeLoading();
   },

@@ -210,7 +210,26 @@
       return func.apply(this, arguments);
     };
   };
+  /**
+   * @description 获取对象的所有KEY值
+   * @method [数组] - keys ( 获取对象的所有KEY值 )
+   * @param {Object} obj 目标对象
+   * @return {Array}
+   * @author wyj on 14/5/25
+   * @example
+   *      Est.keys({name:1,sort:1});
+   *      ==> ['name', 'sort']
+   */
+  function keys(obj) {
+    if (typeOf(obj) !== 'object') return [];
+    if (nativeKeys) return nativeKeys(obj);
+    var keys = [];
+    for (var key in obj)
+      if (hasKey(obj, key)) keys.push(key);
+    return keys;
+  }
 
+  Est.keys = keys;
   /**
    * @description 遍历数据或对象。如果传递了context参数，则把callback绑定到context对象上。
    * 如果list是数组，callback的参数是：(element, index, list, first, last)。

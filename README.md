@@ -1,3 +1,42 @@
+### 组件类型
+```js
+// 普通视图
+var BaseView = BaseView.extend({
+  template: template
+});
+
+// 列表视图
+var model = BaseModel.extend({});
+var collection = BaseCollection.extend({
+  model: model // 此项必需
+});
+var item = BaseItem.extend({
+  tagName: 'li',
+  className: 'item-li'
+});
+var list = BaseList.extend({
+  initialize: fucntion(){
+    this._super({
+      model: model,
+      collection: collection,
+      item: item,
+      render: '.list'
+    });
+  }
+});
+
+// 表单提交视图
+var model = BaseModel.extend({});
+var detail = BaseDetail.extend({
+  initialize: fucntion(){
+    this._super({
+      model: model,
+      form: '.form#submit'
+    });
+  }
+});
+
+```
 ### 组件生命周期及初始配置参数说明
 ```js
 var Module = BaseView.extend({
@@ -13,7 +52,7 @@ var Module = BaseView.extend({
       enter: '#submit' // 执行回车后的按钮点击的元素选择符
       data: {} // 传递给模型类的数据
 
-      // 统一部分
+      // 约定事件
       onChange: fucntion(){}, // 手动调用
       setValue: function(val){}, // 为组件赋值
       onUpdate: function(){}, // 当模型类改变时系统会实时调用这个回调
@@ -72,7 +111,7 @@ var Module = BaseView.extend({
     });
   },
 
-  // 数据载入前(主要用于BaseList与BaseDetail组件中)
+  // 数据载入前
   beforeLoad: function(){},
 
   // 数据载入后
@@ -87,7 +126,13 @@ var Module = BaseView.extend({
   // 监听的字段改变时回调(区别于onUpdate)
   update: function(name){},
 
-  // 模型类保存前(主要用于BaseDetail组件中)
+  // 当模型类发生改变时，此方法一般写在调用组件时的参数配置里，同onChange
+  onUpdate: fucntion(model){},
+
+  // 自定义change事件
+  onChange: function(model){},
+
+  // 模型类保存前
   beforeSave: function(){},
 
   // 模型类保存后
@@ -129,14 +174,16 @@ bb-model: 模型类字段  后面的:keyup表示按下某个键弹起时触发�
 ### 事件绑定
 <input bb-click="handleAdd" type="button" value="添加表单" class="abutton faiButton faiButton-hover" />
 ```js
-bb-click: 事件类型，支持jquery所有的事件
+bb-click="addOne": 事件类型，支持jquery所有的事件
+bb-keyup="addOne:enter$arg1";   当按下回车时触发  $arg1 表示传递给方法的参数，后面可以加多个参数
 ```
 ### 系统自带事件
 ```js
 // BaseItem
 bb-click="_moveUp": 上移
 bb-click="_moveDown": 下移
-bb-click="_del": 删除
+bb-click="_del": 删除，有提示
+bb-click="_remove": 直接删除，无提示
 bb-click="_check": 选中与未选中切换
 
 // BaseList
@@ -155,12 +202,17 @@ bb-checked="checked": 是否选中
 bb-checked="checked_all": 是否全部选中
 bb-checked="result_none": 列表是否为空
 ```
+### 系统自带指令
+```js
+bb-checked="checked";      checkbox选中
+bb-show="models.length";   显示、隐藏   models为BaseList中的this.collection.models
+```
 ### 组件通用方法
 ```js
 this._super(type); // 引用父类，当参数type为view时返回上级视图 model时返回上级模型类，data上级模型类数据,"_init" 执行上级方法,对象时调用父级的_initialize()方法
 this._view('viewId');// 获取视图
 this._region('name', ProductList, {}); // 添加视图区域
-this._service('productList').then(function(){}); // 数据请求服务
+this._service('productList').then(function(result){}); // 数据请求服务
 this._navigate('#/home', true); // 导航
 this._dialog({}); // 模块对话框
 this._watch('color', '.render:style', function(fieldName){}); // 数据监听
@@ -178,6 +230,7 @@ this._delay(function(){}, 5000); // 延迟执行
 this._bind(function(){}); // 绑定上下文
 this._initToolTip(parentNode, className); // 添加提示
 this._close(); // 关闭对话框
+this._set('name', 'aaa'); // 设置模型类，可传对象，类似jquery
 ```
 ### 操作模型类
 ```js
@@ -205,6 +258,9 @@ this._setAttr({
 this._setDefault('args.color', '#999'); // 设置默认值 #999
 this._getDefault('args.color', '#999'); // 获取args.color值，若不存在则初始化为#999并返回
 ```
+### BaseItem操作
+this._getPage(); //获取当前列表第几页
+
 ### 列表操作
 ```js
 this._push(model, dx); // model可为object对象或new model()对象， dx为插入的索引值，不填默认插入到尾部
@@ -215,30 +271,23 @@ this._getItem(index); // 获取第index项
 this._getCheckedItems(isPluck); // 获取选中的列表项 isPluck为true时自动转化为model.toJSON()对象
 this._getCheckboxIds(); // 获取选中项的ids数组
 this._batch({  // 批量操作
-    url: ctx.collection.batchDel,
+    url: CONST.API + '/message/batch/del',
     tip: '删除成功'
 });
 this._batchDel({
     url: CONST.API + '/message/batch/del',
     field: 'id'
 });
-this._search({
-   filter: [
-   {key: 'name', value: this.searchKey },
-   {key: 'prodtype', value: this.searchProdtype} ,
-   {key: 'category', value: this.searchCategory},
-   {key: 'loginView', value: this.searchLoginView},
-   {key: 'ads', value: this.searchAds}
-   ],
-   onBeforeAdd: function(item){
-      // 自定义过滤， 即通过上面的filter后还需要经过这一层过滤
-      // 若通过返回true
-      return item.attributes[obj.key].indexOf(obj.value) !== -1;
-}});
 ```
-### BaseItem操作
-this._getPage(); //获取当前列表第几页
 
+### 集合操作
+```js
+this.collection._set([{},{}])或this._setModels([{},{}]); // 重置列表(常用于过滤数据，排序等)
+this.collection.each(function(model){
+  model._set('name', 'aaa'); // 设置模型类
+  model._get('name'); // 获取值
+});
+```
 ### ui库
 [ui库](http://sj.jihui88.com/mobile/index.html#/ui)
 

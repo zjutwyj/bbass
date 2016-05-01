@@ -77,7 +77,6 @@ var BaseList = SuperView.extend({
        *       });
    */
   _initialize: function(options) {
-    debug('1.BaseList._initialize'); //debug__
     this.dx = 0;
     this.views = [];
     return this._initOpt(options.collection, options);
@@ -130,15 +129,12 @@ var BaseList = SuperView.extend({
    * @author wyj 14.11.20
    */
   _initDataModel: function(model) {
-    if (this._options.data)
+    if (this._options.data) {
       this._options.data.CONST = CONST;
+    }
     this.model = new model(this._options.data);
-  },
-  _getTemp: function() {
 
-  },
-  _getIeTemp: function() {
-
+    this._set('models', []);
   },
   /**
    * 初始化模板， 若传递一个Template模板字符中进来， 则渲染页面
@@ -178,6 +174,7 @@ var BaseList = SuperView.extend({
       }
       this.template = Handlebars.compile(Est.isEmpty(this._options.itemTemp) ? options.template :
         this.$template.html());
+
       if (this._options.append) {
         this.$el.empty();
         this.$el.append(this.template(this.model.attributes));
@@ -217,13 +214,6 @@ var BaseList = SuperView.extend({
     if (this.list.size() === 0)
       this.list = $(options.render);
 
-    debug(function() {
-      if (!ctx.list || ctx.list.size() === 0) {
-        return 'Error1';
-      }
-    }, {
-      type: 'error'
-    }); //debug__
     return this.list;
   },
   /**
@@ -234,13 +224,6 @@ var BaseList = SuperView.extend({
    * @private
    */
   _initCollection: function(options, collection) {
-    debug(function() {
-      if (!options.model) {
-        return 'Error2';
-      }
-    }, {
-      type: 'error'
-    }); //debug__
     if (!this.collection || (this.collection && !this.collection.remove)) this.collection = new collection(options);
     if (options.itemId) this.collection._setItemId(options.itemId);
     //TODO 分类过滤
@@ -296,8 +279,8 @@ var BaseList = SuperView.extend({
       // 单一观察者模式， 监听reloadList事件
       ctx.collection.paginationModel.on('reloadList',
         function(model) {
-          ctx._setValue('checked_all', false);
-          ctx._clear.call(ctx);
+          if (!ctx._options.diff) ctx._setValue('checked_all', false);
+          if (!ctx._options.diff) ctx._clear.call(ctx);
           ctx._load.call(ctx, options, model);
         });
     }
@@ -366,10 +349,6 @@ var BaseList = SuperView.extend({
         ctx.collection.paginationModel.set('page', 1);
         ctx.collection.paginationModel.set('pageSize', 9000);
       }
-      debug(function() {
-        return ('[Query]' + (Est.typeOf(ctx.collection.url) === 'function' ? ctx.collection.url() :
-          ctx.collection.url));
-      }); //debug__
       // 数据载入
       BaseUtils.addLoading()
       ctx.collection._load(ctx.collection, ctx, model).
@@ -392,16 +371,13 @@ var BaseList = SuperView.extend({
             if (result.msg === CONST.LANG.NOT_LOGIN) {
               Est.trigger('checkLogin');
             }
-            debug(function() {
-              return 'Warm3 list.length=0' + (Est.typeOf(ctx.collection.url) === 'function' ? ctx.collection.url() :
-                ctx.collection.url);
-            }); //debug__
           }
         } catch (e) {
           Est.trigger('checkLogin');
           debug('Error4 ' + result.msg); //debug__
         }
         ctx._afterLoad(options);
+        //if (ctx._options.diff) ctx._setModels();
         if (ctx._options.subRender) ctx._filterRoot();
         if (ctx._options.filter) ctx._filterCollection();
         if (result.attributes && result.attributes.model) {
@@ -423,7 +399,6 @@ var BaseList = SuperView.extend({
    *        this._reload();
    */
   _reload: function(options) {
-    debug('BaseList_reload'); //debug__
     this._empty.call(this); // 清空视图
     this.collection.reset(); // 清空collection
     this.list.empty(); // 清空DOM
@@ -436,8 +411,18 @@ var BaseList = SuperView.extend({
    * @private
    */
   _finally: function() {
+    this._set('models', this.collection.models);
+    if (this.cms) {
+      Est.off(this.cid + 'models', this.cms);
+    }
+    this.cms = Est.on(this.cid + 'models', this._bind(function() {
+      console.log('reset model models');
+      this._set('models', this.collection.models);
+    }));
+
     if (this.afterRender) this.afterRender.call(this, this._options);
     if (this._options.toolTip) this._initToolTip();
+
     BaseUtils.removeLoading();
   },
   /**
@@ -543,7 +528,6 @@ var BaseList = SuperView.extend({
    *
    */
   _render: function() {
-    debug('BaseList._render'); //debug__
     this._addAll();
     this.trigger('after', this);
   },
@@ -564,16 +548,6 @@ var BaseList = SuperView.extend({
      }
      ctx.collection.sort();*/
     Est.each(ctx.collection.models, function(item) {
-      debug(function() {
-        if (Est.typeOf(item.attributes[ctx._options.categoryId]) === 'undefined') {
-          return 'Error5 currentId = ' + ctx._options.categoryId + ';url=' + ctx.collection.url;
-        }
-        if (Est.typeOf(item.attributes[ctx._options.parentId]) === 'undefined') {
-          return 'Error6 currentId=' + ctx._options.parentId + ';url=' + ctx.collection.url;
-        }
-      }, {
-        type: 'error'
-      }); //debug__
       temp.push({
         categoryId: item.attributes[ctx._options.categoryId],
         belongId: item.attributes[ctx._options.parentId]
@@ -623,8 +597,42 @@ var BaseList = SuperView.extend({
     });
     Est.each(roots, function(model) {
       model.set('isroot', '01');
-      ctx._addOne(model);
+      if (!ctx._options.diff) {
+        ctx._addOne(model);
+      }
     });
+    if (ctx._options.diff) {
+      this._setModels(roots);
+    }
+  },
+  _remove: function(start, end) {
+    var i = start;
+    while (i > end) {
+      this.collection.models[i - 1].attributes.id = null;
+      this.collection.models[i - 1].view._remove(this.collection.models[i - 1].get('dx'));
+      i--;
+    }
+  },
+  _setModels: function(list) {
+    var len_c = this.collection.models.length;
+    var len_l = list.length;
+    if (len_l > 0 && list[0].view) {
+      list = Est.map(list, function(model) {
+        return model.attributes;
+      });
+    }
+    this.collection.each(this._bind(function(model, i) {
+      if (i > len_l - 1) {} else {
+        model.view._set(this._getPath(list[i]));
+      }
+    }));
+    if (len_l > len_c) { // 添加
+      for (var j = len_c + 1; j <= len_l; j++) {
+        this._push(new this._options.model(this._getPath(list[j - 1])));
+      }
+    } else if (len_l < len_c) {
+      this._remove(len_c, len_l);
+    }
   },
   /**
    * 向视图添加元素
@@ -694,7 +702,6 @@ var BaseList = SuperView.extend({
    *        this._push(new pictureModel(model), this._findIndex(curModel) + 1);
    */
   _push: function(model, index) {
-    debug('BaseList._push'); //debug__
     // 判断第二个参数是否是数字， 否-> 取当前列表的最后一个元素的索引值
     // 判断index是否大于列表长度
     // 若存在items， 则相应插入元素
@@ -717,6 +724,8 @@ var BaseList = SuperView.extend({
     this._resetDx();
     this._setValue('checked_all', false);
 
+    Est.trigger(this.cid + 'models');
+
     if (this._get('result_none')) {
       this.list.find('.no-result').remove();
     }
@@ -737,10 +746,11 @@ var BaseList = SuperView.extend({
    * @author wyj 15.9.3
    */
   _resetDx: function() {
-    debug('BaseList._resetDx'); //debug__
     var _dx = 0;
     Est.each(this.collection.models, function(item) {
-      item.set('dx', _dx);
+      //TODO 新版将移除diff
+      if (item.view.diff) item.view._set('dx', _dx);
+      else item.set('dx', _dx);
       _dx++;
     });
   },
@@ -766,7 +776,6 @@ var BaseList = SuperView.extend({
    * @author wyj 15.1.10
    */
   _filterCollection: function() {
-    debug('BaseList._filterCollection'); //debug__
     this._filter(this._options.filter, this._options);
   },
   /**
@@ -777,7 +786,6 @@ var BaseList = SuperView.extend({
    * @author wyj 15.1.8
    */
   _renderListByPagination: function() {
-    debug('BaseList._renderListByPagination'); //debug__
     this.page = this.collection.paginationModel.get('page');
     this.pageSize = this.collection.paginationModel.get('pageSize');
     this.startIndex = (this.page - 1) * parseInt(this.pageSize, 10);
@@ -803,7 +811,6 @@ var BaseList = SuperView.extend({
    */
   _empty: function() {
     this.dx = 0;
-    debug('BaseList._empty'); //debug__
     if (this._options.append) {
       return this.collection;
     }
@@ -828,6 +835,8 @@ var BaseList = SuperView.extend({
     //清空views数组，此时旧的view就变成没有任何被引用的不可达对象了
     //垃圾回收器会回收它们
     this.views = [];
+
+    Est.trigger(this.cid + 'models');
     //this.list.empty();
     return this.collection;
   },
@@ -841,7 +850,6 @@ var BaseList = SuperView.extend({
    *        this._clear();
    */
   _clear: function() {
-    debug('BaseList._clear'); //debug__
     this._empty.call(this);
     this.list.empty();
     this.collection.models.length = 0;
@@ -854,12 +862,11 @@ var BaseList = SuperView.extend({
    * @author wyj 14.11.16
    */
   _addAll: function() {
-    debug('BaseList._addAll and call this._empty'); //debug__
     this._empty();
     this.collection.each(this._addOne, this);
   },
   /**
-   * 搜索
+   * 搜索(新版将移除)
    *
    * @method [搜索] - _search ( 搜索 )
    * @param options [onBeforeAdd: 自定义过滤]
@@ -879,29 +886,28 @@ var BaseList = SuperView.extend({
    *          return item.attributes[obj.key].indexOf(obj.value) !== -1;
    *       }});
    */
-  _search: function(options) {
-    debug('BaseList._search'); //debug__
-    var ctx = this;
-    this._clear();
-    this.filter = true;
-    options = Est.extend({
-      onBeforeAdd: function() {}
-    }, options);
-    this._load({
-      page: 1,
-      pageSize: 5000,
-      afterLoad: function() {
-        ctx.filter = false;
-        if (!ctx._options.items) {
-          ctx._filter(options.filter || ctx._options.filter, options);
-        } else {
-          ctx._filterItems(options.filter || ctx._options.filter, options);
+  /*  _search: function(options) {
+      var ctx = this;
+      this._clear();
+      this.filter = true;
+      options = Est.extend({
+        onBeforeAdd: function() {}
+      }, options);
+      this._load({
+        page: 1,
+        pageSize: 5000,
+        afterLoad: function() {
+          ctx.filter = false;
+          if (!ctx._options.items) {
+            ctx._filter(options.filter || ctx._options.filter, options);
+          } else {
+            ctx._filterItems(options.filter || ctx._options.filter, options);
+          }
         }
-      }
-    });
-  },
+      });
+    },*/
   /**
-   * 过滤collection
+   * 过滤collection(新版将移除)
    *
    * @method [private] - _filter
    * @param array
@@ -909,8 +915,7 @@ var BaseList = SuperView.extend({
    * @private
    * @author wyj 14.12.8
    */
-  _filter: function(array, options) {
-    debug('BaseList._filter'); //debug__
+  /*_filter: function(array, options) {
     var ctx = this;
     var result = [];
     var len = ctx.collection.models.length;
@@ -951,9 +956,10 @@ var BaseList = SuperView.extend({
       item.set('_isSearch', true);
       ctx._addOne(item);
     });
-  },
+    Est.trigger(this.cid + 'models');
+  },*/
   /**
-   * 过滤items
+   * 过滤items(新版将移除)
    *
    * @method [private] - _filterItems
    * @param array
@@ -961,8 +967,7 @@ var BaseList = SuperView.extend({
    * @private
    * @author wyj 14.12.8
    */
-  _filterItems: function(array, options) {
-    debug('BaseList._filterItems'); //debug__
+  /*_filterItems: function(array, options) {
     var ctx = this;
     var result = [];
     var items = Est.cloneDeep(ctx._options.items);
@@ -1003,9 +1008,9 @@ var BaseList = SuperView.extend({
       ctx.collection.push(item);
       //ctx._addOne(item);
     });
-  },
+  },*/
   /**
-   * 全选checkbox选择框, 只能全选中， 不能全不选中
+   * 全选checkbox选择框, 只能全选中， 不能全不选中(新版将移除)
    *
    * @method [选取] - _checkAll ( 全选checkbox选择框 )
    * @author wyj 14.11.16
@@ -1175,7 +1180,6 @@ var BaseList = SuperView.extend({
    *      })._moveUp(this.model);
    */
   _moveUp: function(model) {
-    debug('BaseList._moveUp'); //debug__
     var ctx = this;
     var first = this.collection.indexOf(model);
     var last, parentId;
@@ -1224,7 +1228,6 @@ var BaseList = SuperView.extend({
    * @author wyj 14.12.4
    */
   _moveDown: function(model) {
-    debug('BaseList._moveDown'); //debug__
     var ctx = this;
     var first = this.collection.indexOf(model);
     var last, parentId;
@@ -1295,7 +1298,7 @@ var BaseList = SuperView.extend({
       Est.chain(this.collection.models).filter(this.__filter).value();
   },
   /**
-   * 转换成[{key: '', value: ''}, ... ] 数组格式 并返回
+   * 转换成[{key: '', value: ''}, ... ] 数组格式 并返回 （频繁调用存在性能问题）
    *
    * @method [集合] - _getItems ( 获取所有列表项 )
    * @author wyj 15.1.15
@@ -1369,6 +1372,7 @@ var BaseList = SuperView.extend({
           } else
             BaseUtils.tip(options.tip);
           ctx._load();
+          Est.trigger(ctx.cid + 'models');
           if (options.callback)
             options.callback.call(ctx, result);
         }
@@ -1377,6 +1381,7 @@ var BaseList = SuperView.extend({
       Est.each(this._getCheckedItems(), function(item) {
         item.destroy();
       });
+      Est.trigger(ctx.cid + 'models');
       if (options.callback)
         options.callback.call(ctx);
     }

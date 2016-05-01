@@ -17,27 +17,11 @@ var SuperView = Backbone.View.extend({
     this.options = options || {};
     this._re_dup = {};
     this._re_selector = {};
+    this._attr_list = {};
     if (this.init && Est.typeOf(this.init) !== 'function') {
       this._initialize(this.init);
     }
     Backbone.View.apply(this, arguments);
-  },
-  /**
-   * 初始化
-   * @method [初始化] - initialize
-   * @private
-   * @return {[type]} [description]
-   */
-  initialize: function() {
-    this._initialize();
-  },
-  /**
-   * 销毁系统绑定的事件及其它
-   * @method [销毁] - _destroy
-   * @return {[type]} [description]
-   */
-  _destroy: function() {
-    this._re_dup = null;
   },
   /**
    * 调用父类方法
@@ -62,6 +46,26 @@ var SuperView = Backbone.View.extend({
     }
   },
   /**
+   * 初始化
+   * @method [初始化] - initialize
+   * @private
+   * @return {[type]} [description]
+   */
+  initialize: function() {
+    this._initialize();
+  },
+
+  /**
+   * 继承
+   * @method [继承] - _extend
+   * @private
+   * @param  {[type]} options [description]
+   * @return {[type]}         [description]
+   */
+  _extend: function(options) {
+    Est.extend(this.options, options);
+  },
+  /**
    * 获取视图
    * @method [视图] - _view
    * @param  {[type]} viewId [description]
@@ -82,14 +86,12 @@ var SuperView = Backbone.View.extend({
     app.addRegion(name, instance, options);
   },
   /**
-   * 继承
-   * @method [继承] - _extend
-   * @private
-   * @param  {[type]} options [description]
-   * @return {[type]}         [description]
+   * service服务
+   * @method _service
+   * @return {[type]} [description]
    */
-  _extend: function(options) {
-    Est.extend(this.options, options);
+  _service: function(type, options) {
+    return Service[type](options);
   },
   /**
    * 导航
@@ -103,110 +105,43 @@ var SuperView = Backbone.View.extend({
     Backbone.history.navigate(name, options);
   },
   /**
-   * 静态对话框， 当你需要显示某个组件的视图但不是以iframe形式打开时
-   * 对话框参数将作为模块里的options参数
+   *  watch system
    *
-   * @method [对话框] - _dialog ( 静态对话框 )
-   * @param options
-   * @author wyj 15.1.22
-   * @example
-   *        // 获取对话框
-   *          app.getDialog('moduleId || id');
-   *          this._dialog({
-   *                moduleId: 'SeoDetail', // 模块ID
-   *                title: 'Seo修改', // 对话框标题
-   *                id: this.model.get('id'), // 初始化模块时传入的ID， 如productId
-   *                width: 600, // 对话框宽度
-   *                height: 250, // 对话框高度
-   *                skin: 'form-horizontal', // className
-   *                hideSaveBtn: false, // 是否隐藏保存按钮， 默认为false
-   *                autoClose: true, // 提交后按确定按钮  自动关闭对话框
-   *                quickClose: true, // 点击空白处关闭对话框
-   *                button: [ // 自定义按钮
-   *                  {
-   *                    value: '保存',
-   *                    callback: function () {
-   *                    this.title('正在提交..');
-   *                    $("#SeoDetail" + " #submit").click(); // 弹出的对话ID选择符为id (注：当不存在id时，为moduleId值)
-   *                    app.getView('SeoDetail'); // 视图为moduleId
-   *                    return false; // 去掉此行将直接关闭对话框
-   *                  }}
-   *                ],
-   *                onShow: function(){ // 对话框弹出后调用   [注意，当调用show方法时， 对话框会重新渲染模块视图，若想只渲染一次， 可以在这里返回false]
-   *                    return true;
-   *                },
-   *                onClose: function(){
-   *                    this._reload(); // 列表刷新
-   *                    this.collection.push(Est.cloneDeep(app.getModels())); // 向列表末尾添加数据, 注意必须要深复制
-   *                    this.model.set(app.getModels().pop()); // 修改模型类
-   *                }
-   *            }, this);
+   * +------------+    .
+   * | _watchBind |    .
+   * +------------+    .
+   *       |           .
+   *       v           .
+   * +------------+    .
+   * |  bb-watch  |    .
+   * |  bb-render |    .
+   * |  bb-chnage |    .
+   * +------------+    .                         +-----------+
+   *       |           .            +-----------+|  observer |
+   *       |           .            |            |  _set     |                      +--------------------+
+   * +-----|------+    .            v            +-----------+                      | html,value,attr    |
+   * |     |      |    .    +--------------+                     +------------+     | show,checked,event |
+   * |     +-----------.--->|   bindName   |                     | directive  |<---+| ...                |
+   * |            |    .    |              |     +------------+  |            |     |                    |
+   * |   _watch   |    .    | selector:dir |<---+|_viewReplace|<-|------------|     +--------------------+
+   * |            |    .    |              |     |  bb-render |  | selector   |
+   * |            |    .    |   callback   |     +------------+  |            |
+   * |     +-----------.--->|              |                     +------------+
+   * |     |      |    .    +--------------+
+   * +-----|------+    .            ^            +------------+
+   *       |           .            |            |  callback  |
+   *       +           .            +-----------+|  bb-change |
+   * +-------------+   .                         +------------+
+   * |   _bbBind   |   .
+   * |-------------|   .
+   * |   bb-model  |   .
+   * |   bb-show   |   .
+   * |   bb-checked|   .
+   * |   bb-event  |   .
+   * |   bb-...    |   .
+   * +-------------+   .
    */
-  _dialog: function(options, context) {
-    var ctx = context || this;
-    var viewId = options.viewId ? options.viewId :
-      Est.typeOf(options.id) === 'string' ? options.id : options.moduleId;
-    if (Est.typeOf(viewId) === 'function') viewId = Est.nextUid('dialog_view');
-    var comm = {
-      width: 'auto',
-      title: null,
-      cover: false,
-      autofocus: false,
-      hideOkBtn: true,
-      hideCloseBtn: true,
-      button: [],
-      quickClose: options.cover ? false :
-        (Est.typeOf(options.autofocus) === 'boolean' ? options.quickClose : false),
-      skin: 'dialog_min'
-    }
 
-    if (options.moduleId && app.getStatus(options.moduleId)) {
-      comm = Est.extend(comm, app.getStatus(options.moduleId));
-    }
-    options = Est.extend(comm, options);
-
-    options = Est.extend(options, {
-      el: '#base_item_dialog' + viewId,
-      content: options.content || '<div id="' + viewId + '"></div>',
-      viewId: viewId,
-      onshow: function() {
-        try {
-          var result = options.onShow && options.onShow.call(this, options);
-          if (typeof result !== 'undefined' && !result)
-            return;
-          if (Est.typeOf(options.moduleId) === 'function') {
-            options.id = options.id || options.viewId;
-            app.addPanel(options.id, {
-              el: '#' + options.id,
-              template: '<div id="base_item_dialog' + options.id + '" class="region ' + options.id + '"></div>'
-            }).addView(options.id, new options.moduleId(options));
-          } else if (Est.typeOf(options.moduleId) === 'string') {
-            seajs.use([options.moduleId], function(instance) {
-              try {
-                if (!instance) {
-                  console.error(options.moduleId + ' is not defined');
-                }
-                app.addPanel(options.viewId, {
-                  el: '#' + options.viewId,
-                  template: '<div id="base_item_dialog' + options.viewId + '" class="region"></div>'
-                }).addView(options.viewId, new instance(options));
-              } catch (e) {
-                console.error(e);
-              }
-            });
-          }
-        } catch (e) {
-          console.log(e);
-        }
-      },
-      onclose: function() {
-        if (app.getPanel(options.viewId)) app.removePanel(options.viewId);
-        if (options.onClose) options.onClose.call(ctx, options);
-        app.getDialogs().pop();
-      }
-    });
-    BaseUtils.dialog(options);
-  },
   /**
    * 单个模型字段绑定
    * @method [绑定] - _singeBind
@@ -292,17 +227,23 @@ var SuperView = Backbone.View.extend({
    * @param  {string} ngAttrName 属性名称(针对IE浏览器)
    * @return {Handlebar}         模板
    */
-  _getCompileTemp: function(attrName, node, selector, ngAttrName) {
+  _getCompileTemp: function(dirName, node, selector, ngDirName, fieldName) {
     var hbsStr = null;
-    switch (attrName) {
+    switch (dirName) {
       case 'html':
         return Handlebars.compile(node.html());
       case 'checked':
-        return Handlebars.compile('checked:{{#if ' + /bb-checked=\"(.*?)\"\s?/img.exec(selector)[1] + '}}true{{else}}false{{/if}}');
+        //Handlebars.compile('checked:{{#if ' + /bb-checked=\"(.*?)\"\s?/img.exec(selector)[1] + '}}true{{else}}false{{/if}}')
+        return Est.compile('{{' + /bb-checked=\"(.*?)\"\s?/img.exec(selector)[1] + '}}');
+      case 'show':
+        hbsStr = node.attr('bb-show').split(':');
+        if (hbsStr.length > 1) hbsStr = hbsStr[1];
+        else hbsStr = hbsStr[0];
+        return Est.compile('{{' + hbsStr + '}}');
       default:
-        hbsStr = node.attr(ngAttrName);
+        hbsStr = node.attr(ngDirName);
         if (!hbsStr && node.is('textarea')) hbsStr = node.html();
-        return Handlebars.compile(hbsStr);
+        return Handlebars.compile(Est.isEmpty(hbsStr) ? '{{' + fieldName + '}}' : hbsStr);
     }
   },
   /**
@@ -317,10 +258,18 @@ var SuperView = Backbone.View.extend({
   _replaceNode: function(attrName, node, result, selector, ngAttrName) {
     switch (attrName) {
       case 'value':
+        if (node.is(':checkbox')) {
+          if (result === 'false' || result === '0' || Est.isEmpty(result)) node.prop('checked', false);
+          else node.prop('checked', true);
+        }
         node.val(result);
         break;
       case 'html':
         node.html(result);
+        break;
+      case 'show':
+        if ((result === 'false' || result === '0' || Est.isEmpty(result)) && !node.is(":hidden")) node.hide();
+        else if (node.is(":hidden")) node.show();
         break;
       case 'checked':
         //node.prop('checked', this._get(/bb-checked=\"(.*?)\"\s?/img.exec(selector)[1]));
@@ -345,8 +294,13 @@ var SuperView = Backbone.View.extend({
    * @param  {string} attrName   属性名称
    * @param  {string} ngAttrName 属性名称(针对IE)
    */
-  _handleReplace: function(item, model, selector, attrName, ngAttrName) {
-    var _result = item.compile(model.attributes);
+  _handleReplace: function(item, model, selector, attrName, ngAttrName, name) {
+    var _result = '';
+    if (this.collection && !Est.equal(model._previousAttributes.models, this.collection.models)) {
+      model._previousAttributes.models = Est.clone(this.collection.models);
+      Est.trigger(this.cid + 'models');
+    }
+    _result = item.compile(model.attributes);
     // 比对数据，若无改变则返回
     if (item.result === _result) {
       return;
@@ -354,7 +308,6 @@ var SuperView = Backbone.View.extend({
     // 缓存node
     if (!item.node) {
       item.node = this.$(selector).eq(item.index);
-      console.log('node cache');
     }
     // 赋值
     this._replaceNode(attrName, item.node, _result, selector, ngAttrName);
@@ -371,6 +324,9 @@ var SuperView = Backbone.View.extend({
     var tempList = [],
       list = [],
       t_list = [];
+
+    var hash = Est.hash(item);
+    if (hash in this._attr_list) return this._attr_list[hash];
 
     if (item.indexOf(']:') > -1) {
       tempList = item.split(']:');
@@ -389,6 +345,7 @@ var SuperView = Backbone.View.extend({
     } else {
       list = item.split(':');
     }
+    this._attr_list[hash] = list;
     return list;
   },
   /**
@@ -398,7 +355,8 @@ var SuperView = Backbone.View.extend({
    */
   _getSelectorSplit: function(selector) {
     var hash = Est.hash(selector);
-    //if (hash in this._re_selector) return this._re_selector[hash];
+    if (hash in this._re_selector) return this._re_selector[hash];
+
     var list = selector.split(',');
     var list2 = [];
     var temp = '';
@@ -433,6 +391,7 @@ var SuperView = Backbone.View.extend({
    */
   _viewReplace: function(selector, model, cbs, name) {
     try {
+      if (!this._re_dup) this._re_dup = {};
       Est.each(this._getSelectorSplit(selector), this._bind(function(item) {
         var list = [],
           _$template = '',
@@ -449,6 +408,7 @@ var SuperView = Backbone.View.extend({
           list = this._getAttrList(item);
 
           if (list.length > 1) {
+
             for (var i = 1; i < list.length; i++) {
               _hash = Est.hash(list[0] + list[i]);
               attrName = list[i];
@@ -468,15 +428,14 @@ var SuperView = Backbone.View.extend({
 
                 $.each(node, $.proxy(function(index, node) {
                   this._re_dup[_hash].push({
-                    compile: this._getCompileTemp(attrName, $(node), list[0], ngAttrName),
+                    compile: this._getCompileTemp(attrName, $(node), list[0], ngAttrName, name),
                     hash: _hash + '' + index,
                     index: index
                   });
-                  console.log(attrName + list[0]);
                 }, this));
               }
               Est.each(this._re_dup[_hash], function(item) {
-                this._handleReplace(item, model, list[0], attrName, ngAttrName);
+                this._handleReplace(item, model, list[0], attrName, ngAttrName, name);
               }, this);
             }
 
@@ -500,11 +459,13 @@ var SuperView = Backbone.View.extend({
           }
         }
       }));
+
       if (cbs) {
         Est.each(cbs, function(cb) {
           cb.call(this, name);
         }, this);
       }
+
     } catch (e) {
       console.log(e + 'selector:' + selector);
     }
@@ -529,29 +490,36 @@ var SuperView = Backbone.View.extend({
       temp_obj = {},
       list = [];
 
-    if (Est.typeOf(name) === 'array') list = name;
-    else list.push(name);
+    if (!this.watchFields) this.watchFields = {};
+    if (!this.cbMap) this.cbMap = {};
 
-    this.cbMap = this.cbMap || {};
-    this.watchFields = this.watchFields || {};
+    if (Est.typeOf(name) === 'array') {
+      list = name;
+    } else {
+      list.push(name);
+    }
 
     Est.each(list, function(item) {
       var modelId = item.replace(/^#?model\d?-(.+)$/g, "$1");
 
       if (callback) {
         this.cbMap[modelId] = this.cbMap[modelId] || [];
+
         if (Est.typeOf(callback) === 'string') {
+
           cb_hash = Est.hash(modelId + callback);
           if (!(cb_hash in this.cbMap)) {
             this.cbMap[cb_hash] = true;
             this.cbMap[modelId].push(this[callback]);
           }
+
         } else {
           this.cbMap[modelId].push(callback);
         }
       }
       if (modelId in this.watchFields) {
         Est.each(this._getSelectorSplit(selector), function(item) {
+
           if (this.watchFields[modelId].indexOf(item) === -1) {
             this.watchFields[modelId] = this.watchFields[modelId] + ',' + item;
           }
@@ -562,6 +530,7 @@ var SuperView = Backbone.View.extend({
 
       selector = this.watchFields[modelId];
       triggerName = _self.cid + modelId;
+
       //if (!_self._options.modelBind || item.indexOf('model-') > -1) _self._modelBind(item);
       if (triggerName in temp_obj) return;
 
@@ -604,16 +573,19 @@ var SuperView = Backbone.View.extend({
         render = /bb-render=\"(.*?)\"\s?/img.exec(item) || '';
         change = /bb-change=\"(.*?)\"\s?/img.exec(item) || '';
         model = /bb-model=\"(.*?)\"\s?/img.exec(item) || '';
-        if (Est.isEmpty(watch) && Est.isEmpty(model)) return;
 
+        if (Est.isEmpty(watch) && Est.isEmpty(model)) return;
         if (watch.length > 1) {
+
           if (watch[1].indexOf(':') > -1) {
             watch_render = this._getWatchRender(watch, render);
             watch = watch_render.watch;
             render = watch_render.render;
+
           } else {
             w_list = watch[1].split(':');
             w_render = '[bb-watch="' + watch[1] + '"]' + watch[1].substring(watch[1].indexOf(':'), watch[1].length);
+
             if (w_list.length > 1) {
               if (render.length < 1) {
                 render = ['', w_render];
@@ -634,10 +606,13 @@ var SuperView = Backbone.View.extend({
     Est.each(list, this._bind(function(item) {
       this._watch(item.watch.split(','), item.render, Est.isEmpty(item.change) ? null : item.change);
     }));
-    if (this.onWatch) this.onWatch.call(this, arguments);
+    if (this.onWatch) {
+      this.onWatch.call(this, arguments);
+    }
   },
   /**
    * bb-watch="args.color:style,args.color1:html"
+   *
    * @method _getWatchRender
    * @param  {[type]} watch  [description]
    * @param  {[type]} render [description]
@@ -670,6 +645,7 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 绑定模型类与事件
+   *
    * @method [绑定] - _bbBind
    * @param  {[type]} template [description]
    * @param  {[type]} parent   [description]
@@ -684,7 +660,8 @@ var SuperView = Backbone.View.extend({
     this.bbList = [];
 
     if (Est.typeOf(template) === 'string') {
-      patt = new RegExp('\\bbb-([\\w\\.]+)=\\"([\\w\\.:]+?)\\"\\s?', 'img');
+      patt = new RegExp('\\bbb-([\\w\\.]+)=\\"(.+?)\\"\\s?', 'img');
+
       while ((result = patt.exec(template)) !== null) {
         this.bbList.push({
           name: result[1],
@@ -692,9 +669,11 @@ var SuperView = Backbone.View.extend({
         });
       }
       Est.each(this.bbList, this._bind(function(item) {
+
         hash = Est.hash(item.name + item.value);
         if (hash in map) return;
         map[hash] = item;
+
         switch (item.name) {
           case 'watch':
             break;
@@ -703,7 +682,10 @@ var SuperView = Backbone.View.extend({
           case 'change':
             break;
           case 'show':
-            console.log('name:' + item.name + ';value:' + item.value);
+            var sep = item.value.split(':');
+            var field = item.value.replace(/^(\w+(?:\.\w+)*)[\s|\.|>|<|!|:].*$/img, '$1').replace('.length', '');
+            this._watch([sep.length > 1 ? sep[0] : field], '[bb-show="' + item.value + '"]:show');
+            Est.trigger(this.cid + field);
             break;
           case 'model':
             this._modelBind(parent, '[bb-model="' + item.value + '"]');
@@ -711,14 +693,56 @@ var SuperView = Backbone.View.extend({
             break;
           case 'checked':
             this._watch([item.value], '[bb-checked="' + item.value + '"]:checked');
-            this.$('[bb-checked="' + item.value + '"]').prop('checked', this._getValue(item.value));
+            this.$('[bb-checked="' + item.value + '"]').prop('checked', this._get(item.value));
             break;
           default:
-            if (this[item.value]) parent.find('[bb-' + item.name + '="' + item.value + '"]').off(item.name).on(item.name, this._bind(this[item.value]));
+            this._handleEvents(parent, item.name, item.value);
         }
       }));
     }
   },
+  /**
+   * 处理事件与参数
+   *
+   * @method _handleEvents
+   * @param  {node}   parent 父元素
+   * @param  {string} name  字段名称
+   * @param  {string} value 字符串
+   * @return {void}
+   */
+  _handleEvents: function(parent, name, value) {
+    var colonRe = /:([^:\$\s]*)/img,
+      dollarRe = /\$([^:\$\s]*)/img,
+      nameRe = /(.[^:\$\s]*).*/img;
+
+    var args = [],
+      fn = nameRe.exec(value)[1],
+      colons = Est.map(value.match(colonRe) || [], function(str) {
+        return str.replace(':', '');
+      }),
+      dollars = Est.map(value.match(dollarRe) || [], function(str) {
+        return str.replace('$', '');
+      });
+
+    if (this[fn]) parent.find('[bb-' + name + '="' + value + '"]').off(name).on(name, this._bind(function(e) {
+      if (colons.length > 0) {
+        switch (colons[0]) {
+          case 'enter':
+            if (e.keyCode === 13) {
+              this[fn].apply(this, dollars.concat([e]));
+            }
+            break;
+        }
+      } else {
+        this[fn].apply(this, dollars.concat([e]));
+      }
+    }));
+  },
+
+
+
+
+
   /**
    * 字段序列化成字符串
    *
@@ -731,9 +755,11 @@ var SuperView = Backbone.View.extend({
   _stringifyJSON: function(array) {
     var keys, result;
     if (!JSON.stringify) alert(CONST.LANG.JSON_TIP);
+
     Est.each(array, function(item) {
       keys = item.split('.');
       if (keys.length > 1) {
+
         result = Est.getValue(this.model.attributes, item);
         Est.setValue(this.model.attributes, item, JSON.stringify(result));
       } else {
@@ -750,6 +776,7 @@ var SuperView = Backbone.View.extend({
   _parseJSON: function(array) {
     var keys, result;
     var parse = JSON.parse || $.parseJSON;
+
     if (!parse) alert(CONST.LANG.JSON_TIP);
 
     Est.each(array, function(item) {
@@ -862,8 +889,9 @@ var SuperView = Backbone.View.extend({
    */
   _setDefault: function(path, value) {
     var result = Est.getValue(this.model.attributes, path);
-    if (Est.typeOf(result) === 'undefined' || Est.typeOf(result) === 'null')
+    if (Est.typeOf(result) === 'undefined' || Est.typeOf(result) === 'null') {
       Est.setValue(this.model.attributes, path, value);
+    }
   },
   /**
    * 模型类初始化
@@ -948,9 +976,34 @@ var SuperView = Backbone.View.extend({
     this._m_change_ = false;
     if (Est.typeOf(path) === 'object') this._baseSetValues(path);
     else this._setValue(path, val);
-    if (this._m_change_ && this.options.onUpdate)
+    if (this._m_change_ && this.options.onUpdate) {
       this.options.onUpdate.call(this, this.model.toJSON());
+    }
   },
+  /**
+   * 属性计算方法
+   *
+   * @method _handleComputed
+   * @return {void} [description]
+   */
+  /*_handleComputed: function(path) {
+    if (!this.computed) {
+      return;
+    }
+    Est.each(this.computed(), this._bind(function(_val, key) {
+      debug('computed:' + key);
+      if (Est.typeOf(_val) === 'function') {
+        this._set(key, _val.call(this));
+      } else if (path === key) {
+        if (_val.set) {
+          _val.set.call(this, this._get(key));
+        }
+        if (_val.get) {
+          this._set(key, _val.get.call(this))
+        }
+      }
+    }))
+  },*/
   /**
    * 批量赋值
    * @method [模型] - _baseSetValues
@@ -985,7 +1038,9 @@ var SuperView = Backbone.View.extend({
    */
   _setValues: function(keyVals) {
     this._baseSetValues(keyVals);
-    if (this._options.onChange) this._options.onChange.call(this, keyVals);
+    if (this._options.onChange) {
+      this._options.onChange.call(this, keyVals);
+    }
   },
 
   /**
@@ -1006,7 +1061,9 @@ var SuperView = Backbone.View.extend({
    */
   _setAttributes: function(path, val) {
     this._baseSetAttr(path, val);
-    if (this._options.onChange) this._options.onChange.call(this, path);
+    if (this._options.onChange) {
+      this._options.onChange.call(this, path);
+    }
   },
 
   /**
@@ -1118,6 +1175,132 @@ var SuperView = Backbone.View.extend({
   _bind: function(fn) {
     return Est.proxy(fn, this);
   },
+  _empty: function() {},
+  /**
+   * 销毁系统绑定的事件及其它
+   * @method [销毁] - _destroy
+   * @return {[type]} [description]
+   */
+  _destroy: function() {
+    this._re_dup = null;
+  },
+  /**
+   * 关闭对话框
+   * @method _close
+   */
+  _close: function() {
+    if (app.getDialog(this.viewId)) {
+      app.getDialog(this.viewId).close().remove();
+    }
+  },
+  render: function() {
+    this._render();
+  },
+  /**
+   * 静态对话框， 当你需要显示某个组件的视图但不是以iframe形式打开时
+   * 对话框参数将作为模块里的options参数
+   *
+   * @method [对话框] - _dialog ( 静态对话框 )
+   * @param options
+   * @author wyj 15.1.22
+   * @example
+   *        // 获取对话框
+   *          app.getDialog('moduleId || id');
+   *          this._dialog({
+   *                moduleId: 'SeoDetail', // 模块ID
+   *                title: 'Seo修改', // 对话框标题
+   *                id: this.model.get('id'), // 初始化模块时传入的ID， 如productId
+   *                width: 600, // 对话框宽度
+   *                height: 250, // 对话框高度
+   *                skin: 'form-horizontal', // className
+   *                hideSaveBtn: false, // 是否隐藏保存按钮， 默认为false
+   *                autoClose: true, // 提交后按确定按钮  自动关闭对话框
+   *                quickClose: true, // 点击空白处关闭对话框
+   *                button: [ // 自定义按钮
+   *                  {
+   *                    value: '保存',
+   *                    callback: function () {
+   *                    this.title('正在提交..');
+   *                    $("#SeoDetail" + " #submit").click(); // 弹出的对话ID选择符为id (注：当不存在id时，为moduleId值)
+   *                    app.getView('SeoDetail'); // 视图为moduleId
+   *                    return false; // 去掉此行将直接关闭对话框
+   *                  }}
+   *                ],
+   *                onShow: function(){ // 对话框弹出后调用   [注意，当调用show方法时， 对话框会重新渲染模块视图，若想只渲染一次， 可以在这里返回false]
+   *                    return true;
+   *                },
+   *                onClose: function(){
+   *                    this._reload(); // 列表刷新
+   *                    this.collection.push(Est.cloneDeep(app.getModels())); // 向列表末尾添加数据, 注意必须要深复制
+   *                    this.model.set(app.getModels().pop()); // 修改模型类
+   *                }
+   *            }, this);
+   */
+  _dialog: function(options, context) {
+    var ctx = context || this;
+    var viewId = options.viewId ? options.viewId :
+      Est.typeOf(options.id) === 'string' ? options.id : options.moduleId;
+    if (Est.typeOf(viewId) === 'function') viewId = Est.nextUid('dialog_view');
+    var comm = {
+      width: 'auto',
+      title: null,
+      cover: false,
+      autofocus: false,
+      hideOkBtn: true,
+      hideCloseBtn: true,
+      button: [],
+      quickClose: options.cover ? false :
+        (Est.typeOf(options.autofocus) === 'boolean' ? options.quickClose : false),
+      skin: 'dialog_min'
+    };
+
+    if (options.moduleId && app.getStatus(options.moduleId)) {
+      comm = Est.extend(comm, app.getStatus(options.moduleId));
+    }
+    options = Est.extend(comm, options);
+
+    options = Est.extend(options, {
+      el: '#base_item_dialog' + viewId,
+      content: options.content || '<div id="' + viewId + '"></div>',
+      viewId: viewId,
+      onshow: function() {
+        try {
+          var result = options.onShow && options.onShow.call(this, options);
+          if (typeof result !== 'undefined' && !result)
+            return;
+          if (Est.typeOf(options.moduleId) === 'function') {
+            options.id = options.id || options.viewId;
+            app.addPanel(options.id, {
+              el: '#' + options.id,
+              template: '<div id="base_item_dialog' + options.id + '" class="region ' + options.id + '"></div>'
+            }).addView(options.id, new options.moduleId(options));
+          } else if (Est.typeOf(options.moduleId) === 'string') {
+            seajs.use([options.moduleId], function(instance) {
+              try {
+                if (!instance) {
+                  console.error(options.moduleId + ' is not defined');
+                }
+                app.addPanel(options.viewId, {
+                  el: '#' + options.viewId,
+                  template: '<div id="base_item_dialog' + options.viewId + '" class="region"></div>'
+                }).addView(options.viewId, new instance(options));
+              } catch (e) {
+                console.error(e);
+              }
+            });
+          }
+        } catch (e) {
+          console.log(e);
+        }
+      },
+      onclose: function() {
+        if (app.getPanel(options.viewId)) app.removePanel(options.viewId);
+        if (options.onClose) options.onClose.call(ctx, options);
+        app.getDialogs().pop();
+      }
+    });
+    BaseUtils.dialog(options);
+  },
   /**
    * title提示
    * @method [提示] - _initToolTip ( title提示 )
@@ -1162,24 +1345,5 @@ var SuperView = Backbone.View.extend({
         app.getDialog(Est.hash($(this).attr('data-title') || $(this).attr('title'))).close();
       } catch (e) {}
     });
-  },
-  /**
-   * 关闭对话框
-   * @method _close
-   */
-  _close: function() {
-    if (app.getDialog(this.viewId)) app.getDialog(this.viewId).close().remove();
-  },
-  /**
-   * service服务
-   * @method _service
-   * @return {[type]} [description]
-   */
-  _service: function(type, options) {
-    return Service[type](options);
-  },
-  _empty: function() {},
-  render: function() {
-    this._render();
   }
 });

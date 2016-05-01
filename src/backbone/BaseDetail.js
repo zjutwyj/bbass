@@ -75,11 +75,6 @@ var BaseDetail = SuperView.extend({
     this.list = options.render ? this.$(options.render) : this.$el;
     if (this.list.size() === 0)
       this.list = $(options.render);
-    debug(function() {
-      if (!ctx.list || ctx.list.size() === 0) {
-        return 'Error15 viewId=' + ctx.options.viewId + (ctx._options.render ? ctx._options.render : ctx.el);
-      }
-    }, { type: 'error' }); //debug__
     return this.list;
   },
   /**
@@ -121,11 +116,6 @@ var BaseDetail = SuperView.extend({
    * @author wyj 14.11.15
    */
   _initModel: function(model, ctx) {
-
-    debug(function() {
-      if (!model) return 'Error16';
-    }, { type: 'error' }); //debug__
-
     ctx.passId = this.options.id || this._options.data.id || Est.getUrlParam('id', window.location.href);
 
     if (!Est.isEmpty(this.passId)) {
@@ -298,10 +288,10 @@ var BaseDetail = SuperView.extend({
           }
           $button.html(preText);
         }, function(response) {
-          debugger
           if (response.msg === CONST.LANG.NOT_LOGIN) {
             Est.trigger('checkLogin');
           }
+          if (ctx.errorSave) ctx.errorSave.call(ctx, response);
           if (options.onErrorSave) options.onErrorSave.call(ctx, response);
         });
         setTimeout(function() {
@@ -332,10 +322,7 @@ var BaseDetail = SuperView.extend({
    * @author wyj 14.11.15
    */
   _saveItem: function(callback, error) {
-    debug('- BaseDetail._saveItem'); //debug__
-    if (Est.typeOf(this.model.url) === 'string') debug('Error29', { type: 'error' }); //debug__
     if (Est.isEmpty(this.model.url())) {
-      debug('Error19', { type: 'error' }); //debug__
       return;
     }
     if (this.model.attributes._response) {
@@ -344,7 +331,6 @@ var BaseDetail = SuperView.extend({
     this.model.save(null, {
       wait: true,
       success: function(response) {
-        debug('- BaseDetail._saveSuccess'); //debug__
         app.addModel(Est.cloneDeep(response.attributes));
         if (top) {
           top.model = response.attributes;
@@ -371,17 +357,5 @@ var BaseDetail = SuperView.extend({
   _empty: function() {
     this.model.off();
     this.$el.empty().off();
-  },
-  /**
-   * 移除所有绑定的事件
-   *
-   * @method [事件] - _close ( 移除所有绑定事件 )
-   * @author wyj 14.11.16
-   */
- /* _close: function() {
-    debug('- BaseDetail.close'); //debug__
-    this.undelegateEvents();
-    this.stopListening();
-    this.off();
-  }*/
+  }
 });

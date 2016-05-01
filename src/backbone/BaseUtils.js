@@ -176,7 +176,6 @@ var BaseUtils = {
       window.$loading = $('<div id="loading" class="loading"><div class="object" id="object_one"></div><div class="object" id="object_two"></div><div class="object" id="object_three"></div></div>');
       $('body').append(window.$loading);
     } catch (e) {
-      debug('Error28' + e); //debug__
     }
     return window.$loading;
   },
@@ -204,7 +203,6 @@ var BaseUtils = {
    *      }, this);
    */
   execute: function(name) {
-    debug('- BaseUtils.execute ' + name); //debug__
     return BaseUtils[name] && BaseUtils[name].apply(BaseUtils, [].slice.call(arguments, 1));
   }
 };

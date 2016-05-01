@@ -16,9 +16,7 @@ var PaginationModel = Backbone.Model.extend({
     pageSize: 16,
     count: 0
   },
-  initialize: function() {
-    debug('3.PaginationModel.initialize'); //debug__
-  }
+  initialize: function() {}
 });
 
 var BaseCollection = Backbone.Collection.extend({
@@ -78,7 +76,6 @@ var BaseCollection = Backbone.Collection.extend({
               }
    */
   _initialize: function() {
-    debug('2.BaseCollection._initialize'); //debug__
     this._baseUrl = this.url;
     if (!this.paginationModel) {
       this.paginationModel = new PaginationModel({
@@ -103,12 +100,6 @@ var BaseCollection = Backbone.Collection.extend({
   parse: function(resp, xhr) {
     var ctx = this;
     if (Est.isEmpty(resp)) {
-      debug(function() {
-        var url = Est.typeOf(ctx.url) === 'function' ? ctx.url() : ctx.url;
-        return 'Error:14 ' + url;
-      }, {
-        type: 'error'
-      }); //debug__
       return [];
     }
     this._parsePagination(resp);
@@ -128,7 +119,6 @@ var BaseCollection = Backbone.Collection.extend({
    * @author wyj 14.11.16
    */
   _parseUrl: function(model) {
-    debug('- BaseCollection._parseUrl'); //debug__
     var page = 1,
       pageSize = 16;
     if (model && model.get('pageSize')) {
@@ -154,7 +144,6 @@ var BaseCollection = Backbone.Collection.extend({
    * @author wyj 14.11.16
    */
   _parsePagination: function(resp) {
-    debug('6.BaseCollection._parsePagination'); //debug__
     resp.attributes = resp.attributes || {
       page: 1,
       per_page: 10,
@@ -210,22 +199,14 @@ var BaseCollection = Backbone.Collection.extend({
    *         }
    */
   _load: function(instance, context, model) {
-    debug('4.BaseCollection._load'); //debug__
-    //if (!Est.isEmpty(this.itemId)) this.url = this.url + '/' + this.itemId;
     this._parseUrl(model);
     return instance.fetch({
       success: function() {
-        //resolve(instance);
-        debug('5.collection reset'); //debug__
-        context._empty();
+        if (!context.options.diff) context._empty();
       },
       cacheData: this.options.cache,
       session: this.options.session
     });
-    /* var $q = Est.promise;
-     return new $q(function (resolve) {
-
-     });*/
   },
   /**
    * 设置itemId
@@ -238,7 +219,14 @@ var BaseCollection = Backbone.Collection.extend({
    */
   _setItemId: function(itemId) {
     this._itemId = itemId;
-    debug('- get list by itemId ' + this._itemId); //debug__
+  },
+  /**
+   * 设置列表
+   * @method _set
+   * @param {[type]} list [description]
+   */
+  _set: function(list) {
+    return this._super('view')._setModels(list);
   },
   /**
    * 清空列表
@@ -247,13 +235,13 @@ var BaseCollection = Backbone.Collection.extend({
    * @author wyj 14.11.15
    */
   _empty: function() {
-    debug('BaseCollection._empty'); //debug__
     if (this.collection) {
       var len = this.collection.length;
       while (len > -1) {
         this.collection.remove(this.collection[len]);
         len--;
       }
+      Est.trigger(this._super('view').cid + 'models')
     }
   }
 });

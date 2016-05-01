@@ -3,12 +3,11 @@
  * @class ModuleName
  * @author yongjin<zjut_wyj@163.com> 2016/2/6
  */
-define('UiTest', ['template/ui_test', 'Tab', 'jasmine'], function(require, exports, module) {
-  var UiTest, template, Tab, jasmine;
+define('UiTest', ['template/ui_test', 'Tab'], function(require, exports, module) {
+  var UiTest, template, Tab;
 
   template = require('template/ui_test');
   Tab = require('Tab');
-  jasmine = require('jasmine');
 
   UiTest = BaseView.extend({
     initialize: function() {
@@ -19,6 +18,7 @@ define('UiTest', ['template/ui_test', 'Tab', 'jasmine'], function(require, expor
     },
     afterRender: function() {
       var items = [
+        { text: 'TodoMvc', moduleId: 'UiTodoMvc', oneRender: false },
         { text: 'Diff测试', moduleId: 'UiDiff', oneRender: false },
         { text: '分页列表', moduleId: 'UiList', oneRender: false },
         { text: '更多列表', moduleId: 'UiListMore', oneRender: false },
@@ -39,7 +39,7 @@ define('UiTest', ['template/ui_test', 'Tab', 'jasmine'], function(require, expor
       app.addRegion('testNav', Tab, {
         tpl: '<a href="javascript:;" class="tool-tip" data-title="{{text}}">{{text}}</a>', // 模版
         el: this.$('#test-nav'), // 插入点
-        cur: 'UiDiff', // 显示当前项内容
+        cur: 'UiTodoMvc', // 显示当前项内容
         theme: 'tab-ul-line', // 样式：目前有tab-ul-normal,tab-ul-text,tab-ul-btn,tab-ul-line
         path: 'moduleId', // 作用域字段
         toolTip: true,
@@ -47,7 +47,7 @@ define('UiTest', ['template/ui_test', 'Tab', 'jasmine'], function(require, expor
       });
       window.$footer = window.$footer || $('#mobile-foot');
       window.$footer.hide();
-      this.jasmine();
+      //this.jasmine();
     },
     jasmine: function() {
       describe('BaseApp', function() {

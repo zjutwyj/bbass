@@ -34,9 +34,6 @@ var BaseModel = Backbone.Model.extend({
     var sep = Est.isEmpty(this.params) ? '' : '?';
     if (this.isNew() && Est.isEmpty(this.id)) return base + sep + this.params;
     _url = base + (base.charAt(base.length - 1) == '/' ? '' : '/') + this.id + sep + this.params;
-    debug(function() {
-      return ('[Query]' + _url);
-    }); //debug__
     return _url;
   },
   /**
@@ -49,7 +46,6 @@ var BaseModel = Backbone.Model.extend({
    */
   _initialize: function(options) {
     this.validateMsg = null;
-    debug('9.BaseModel._initialize ' + this.baseId); //debug__
   },
   /**
    * 过滤结果, 并提示信息对话框, 若不想提示信息可以设置hideTip为true
@@ -86,7 +82,6 @@ var BaseModel = Backbone.Model.extend({
     if ('msg' in response) BaseUtils.removeLoading();
     if (Est.isEmpty(response)) {
       var url = Est.typeOf(this.url) === 'function' ? this.url() : this.url;
-      debug('Error25 url' + url); //debug__
       BaseUtils.tip(CONST.LANG.REQUIRE_FAILED);
       return false;
     }
@@ -206,9 +201,6 @@ var BaseModel = Backbone.Model.extend({
     if (options.hideTip) newModel.hideTip = true;
     newModel.hideOkBtn = true;
     newModel.set('editField', true);
-    debug(function() {
-      if (!newModel.baseUrl) return 'Error27';
-    }, { type: 'console' }); //debug__
     if (newModel.baseUrl) {
       newModel.save(null, {
         success: function(model, result) {
@@ -310,6 +302,12 @@ var BaseModel = Backbone.Model.extend({
    */
   _setValue: function(path, val) {
     Est.setValue(this.attributes, path, val);
+  },
+  _set: function(path, val) {
+    return this.view._set(path, val);
+  },
+  _get: function(path) {
+    return this.view._get(path);
   },
   initialize: function() {
     this._initialize();
