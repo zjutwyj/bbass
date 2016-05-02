@@ -18,6 +18,7 @@ var SuperView = Backbone.View.extend({
     this._re_dup = {};
     this._re_selector = {};
     this._attr_list = {};
+    this._directives_ = {};
     if (this.init && Est.typeOf(this.init) !== 'function') {
       this._initialize(this.init);
     }
@@ -705,7 +706,8 @@ var SuperView = Backbone.View.extend({
             break;
           default:
             if (app.getDirective(item.name)) {
-              Est.extend(app.getDirective(item.name), app.getDirective(item.name).bind.call(this, item.value));
+              Est.extend(app.getDirective(item.name), app.getDirective(item.name).bind.call(this, item.value, '[bb-'+item.name+'="' + item.value + '"]'));
+              //this._directives_.push(app.getDirective(item.name));
             } else {
               this._handleEvents(parent, item.name, item.value);
             }
@@ -968,7 +970,7 @@ var SuperView = Backbone.View.extend({
    * @return {string}       [description]
    */
   _getField: function(value) {
-    return value.replace(/^(\w+(?:\.\w+)*)[\s|\.|>|<|!|:].*$/img, '$1').replace('.length', '')
+    return value.replace(/^[!|(]*(\w+(?:\.\w+)*)[\s|\.|>|<|!|:=].*$/img, '$1').replace('.length', '')
   },
   /**
    * 获取boolean值，  比如字符串 'true' '1' 'str' 均为true, 'false', '0', '' 均为false

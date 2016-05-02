@@ -606,11 +606,14 @@ var BaseList = SuperView.extend({
     }
   },
   _remove: function(start, end) {
-    var i = start;
-    while (i > end) {
-      this.collection.models[i - 1].attributes.id = null;
-      this.collection.models[i - 1].view._remove(this.collection.models[i - 1].get('dx'));
-      i--;
+    var end = typeof end === 'undefined' ? (start + 1) : end;
+    if (end > this.collection.models.length) {
+      return;
+    }
+    while (end > start) {
+      this.collection.models[end - 1].attributes.id = null;
+      this.collection.models[end - 1].view._remove(this.collection.models[end - 1].get('dx'));
+      end--;
     }
   },
   _setModels: function(list) {
@@ -631,7 +634,7 @@ var BaseList = SuperView.extend({
         this._push(new this._options.model(this._getPath(list[j - 1])));
       }
     } else if (len_l < len_c) {
-      this._remove(len_c, len_l);
+      this._remove(len_l, len_c);
     }
   },
   /**

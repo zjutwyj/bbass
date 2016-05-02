@@ -273,6 +273,7 @@ this._getItems(); // 获取全部列表
 this._getItem(index); // 获取第index项
 this._getCheckedItems(isPluck); // 获取选中的列表项 isPluck为true时自动转化为model.toJSON()对象
 this._getCheckboxIds(); // 获取选中项的ids数组
+this._remove(start, end); // 移除元素
 this._batch({  // 批量操作
     url: CONST.API + '/message/batch/del',
     tip: '删除成功'
@@ -303,17 +304,17 @@ this.collection.each(function(model){
 ### 组件指令
 ```js
 app.addDirective('disabled', {
-  bind: function(value) {
+  bind: function(value, selector) {
     var compile = Est.compile('{{' + value + '}}');
     var bool = this._getBoolean(compile(this.model.attributes));
     this._watch([this._getField(value)], '[bb-disabled="' + value + '"]:disabled');
-    this.$('[bb-disabled="' + value + '"]').prop('disabled', bool);
+    this.$(selector).prop('disabled', bool);
 
     return {
       compile: compile
     }
   },
-  replace: function(directiveName, node, selector, result) {
+  replace: function(name, node, selector, result) {
     node.prop('disabled', this._getBoolean(result));
   }
 });
