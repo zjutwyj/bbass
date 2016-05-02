@@ -206,6 +206,7 @@ bb-click="_save": 保存表单(当需要实时保存且不需要提示“保存�
 ```js
 bb-checked="checked";      checkbox选中
 bb-show="models.length";   显示、隐藏   models为BaseList中的this.collection.models
+bb-disabled="models.length"
 ```
 ### 组件通用方法
 ```js
@@ -392,10 +393,10 @@ new BaseService().factory({
 ### 更新记录
 
 >2016.05.02<br>
-新增指令bb-disabled<br>
+新增指令 bb-disabled<br>
 新增指令系统<br>
 新增组件通用方法 this._getField
 新增组件通用方法 this._getBoolean
 
 >2016.05.01<br>
-新增bb-show指令
+新增指令 bb-show
