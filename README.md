@@ -368,9 +368,10 @@ new BaseService().factory({
 
 ### 更新记录
 
->2016.05.02
-新增指令系统
+>2016.05.02<br>
+新增指令bb-disabled<br>
+新增指令系统<br>
 新增系统通用方法 this._getField
 
->2016.05.01
+>2016.05.01<br>
 新增bb-show指令
