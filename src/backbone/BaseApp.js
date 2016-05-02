@@ -44,6 +44,7 @@ Est.extend(BaseApp.prototype, {
     };
     // 缓存
     this.cache = {};
+    this.directives = {};
   },
   /**
    * 返回当前应用底层使用的是backbone版本
@@ -662,6 +663,7 @@ Est.extend(BaseApp.prototype, {
   },
   /**
    * 添加cookie
+   *
    * @method [cookie] - addCookie ( 添加cookie )
    * @author wyj 15.1.13
    */
@@ -673,12 +675,32 @@ Est.extend(BaseApp.prototype, {
   },
   /**
    * 获取所有保存的cookie
+   *
    * @method [cookie] - getCookies ( 获取所有保存的cookie )
    * @return {Array}
    * @author wyj 15.1.13
    */
   getCookies: function() {
     return this.cookies;
+  },
+  /**
+   * 添加指令
+   *
+   * @method addDirective
+   * @param {[type]} name [description]
+   * @param {[type]} obj  [description]
+   */
+  addDirective: function(name, obj) {
+    this.directives[name] = obj;
+  },
+  /**
+   * 获取指令
+
+   * @method getDirective
+   * @return {[type]} [description]
+   */
+  getDirective: function(name) {
+    return this.directives[name];
   }
 });
 window.app = window.app || new BaseApp({});

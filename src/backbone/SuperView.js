@@ -241,9 +241,13 @@ var SuperView = Backbone.View.extend({
         else hbsStr = hbsStr[0];
         return Est.compile('{{' + hbsStr + '}}');
       default:
-        hbsStr = node.attr(ngDirName);
-        if (!hbsStr && node.is('textarea')) hbsStr = node.html();
-        return Handlebars.compile(Est.isEmpty(hbsStr) ? '{{' + fieldName + '}}' : hbsStr);
+        if (app.getDirective(dirName)) {
+          return app.getDirective(dirName).compile;
+        } else {
+          hbsStr = node.attr(ngDirName);
+          if (!hbsStr && node.is('textarea')) hbsStr = node.html();
+          return Handlebars.compile(Est.isEmpty(hbsStr) ? '{{' + fieldName + '}}' : hbsStr);
+        }
     }
   },
   /**
@@ -282,7 +286,11 @@ var SuperView = Backbone.View.extend({
         }
         break;
       default:
-        node.attr(ngAttrName, result);
+        if (app.getDirective(attrName) && app.getDirective(attrName).replace) {
+          app.getDirective(attrName).replace.apply(this, [attrName, node, selector, result]);
+        } else {
+          node.attr(ngAttrName, result);
+        }
     }
   },
   /**
@@ -683,7 +691,7 @@ var SuperView = Backbone.View.extend({
             break;
           case 'show':
             var sep = item.value.split(':');
-            var field = item.value.replace(/^(\w+(?:\.\w+)*)[\s|\.|>|<|!|:].*$/img, '$1').replace('.length', '');
+            var field = this._getField(item.value);
             this._watch([sep.length > 1 ? sep[0] : field], '[bb-show="' + item.value + '"]:show');
             Est.trigger(this.cid + field);
             break;
@@ -696,7 +704,11 @@ var SuperView = Backbone.View.extend({
             this.$('[bb-checked="' + item.value + '"]').prop('checked', this._get(item.value));
             break;
           default:
-            this._handleEvents(parent, item.name, item.value);
+            if (app.getDirective(item.name)) {
+              Est.extend(app.getDirective(item.name), app.getDirective(item.name).bind.call(this, item.value));
+            } else {
+              this._handleEvents(parent, item.name, item.value);
+            }
         }
       }));
     }
@@ -947,6 +959,34 @@ var SuperView = Backbone.View.extend({
     }));
 
     return temp;
+  },
+  /**
+   * 获取监听字段
+   *
+   * @method _getField
+   * @param  {string} value [description]
+   * @return {string}       [description]
+   */
+  _getField: function(value) {
+    return value.replace(/^(\w+(?:\.\w+)*)[\s|\.|>|<|!|:].*$/img, '$1').replace('.length', '')
+  },
+  /**
+   * 获取boolean值，  比如字符串 'true' '1' 'str' 均为true, 'false', '0', '' 均为false
+   * @param  {[type]} value [description]
+   * @return {[type]}       [description]
+   */
+  _getBoolean: function(value) {
+    var bool = null;
+    if (value === 'true' || value === '1') {
+      bool = true;
+    } else if (value === 'false' || value === '0' || value === '') {
+      bool = false;
+    } else if (Est.typeOf(value) === 'string' && Est.isEmpty(this._get(value))) {
+      bool = true;
+    } else if (Est.typeOf(this._get(value)) === 'boolean') {
+      bool = this._get(value);
+    }
+    return bool;
   },
   /**
    * 设置model值

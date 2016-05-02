@@ -177,13 +177,13 @@ bb-model: 模型类字段  后面的:keyup表示按下某个键弹起时触发�
 bb-click="addOne": 事件类型，支持jquery所有的事件
 bb-keyup="addOne:enter$arg1";   当按下回车时触发  $arg1 表示传递给方法的参数，后面可以加多个参数
 ```
-### 系统自带属性
+### 组件自带属性
 ```js
 bb-checked="checked": 是否选中
 bb-checked="checked_all": 是否全部选中
 bb-checked="result_none": 列表是否为空
 ```
-### 系统自带事件
+### 组件自带事件
 ```js
 // BaseItem
 bb-click="_moveUp": 上移
@@ -202,7 +202,7 @@ bb-click="_clearChecked": 全不选中  当参数为true时， 忽略diff
 bb-click="_reset": 初始化表单
 bb-click="_save": 保存表单(当需要实时保存且不需要提示“保存成功”时使用)
 ```
-### 系统自带指令
+### 组件自带指令
 ```js
 bb-checked="checked";      checkbox选中
 bb-show="models.length";   显示、隐藏   models为BaseList中的this.collection.models
@@ -232,8 +232,9 @@ this._initToolTip(parentNode, className); // 添加提示
 this._close(); // 关闭对话框
 this._set('name', 'aaa'); // 设置模型类，可传对象，类似jquery
 this._getField('remaining!== models.length'); => 'remaining'// 获取表达式字段
+this._getBoolean('true');   // 获取boolean值，'true' '1' 'str' 均为true, 'false', '0', '' 均为false
 ```
-### 操作模型类
+### 模型类操作
 ```js
 // 重置模型类
 this._reset();
@@ -297,6 +298,25 @@ this.collection.each(function(model){
 
 ### 工具类库
 详见doc文档
+
+### 组件指令
+```js
+app.addDirective('disabled', {
+  bind: function(value) {
+    var compile = Est.compile('{{' + value + '}}');
+    var bool = this._getBoolean(compile(this.model.attributes));
+    this._watch([this._getField(value)], '[bb-disabled="' + value + '"]:disabled');
+    this.$('[bb-disabled="' + value + '"]').prop('disabled', bool);
+
+    return {
+      compile: compile
+    }
+  },
+  replace: function(directiveName, node, selector, result) {
+    node.prop('disabled', this._getBoolean(result));
+  }
+});
+```
 
 ### 模板指令
 ```html
@@ -366,12 +386,16 @@ new BaseService().factory({
 [图片上传(fileupload)](https://blueimp.github.io/jQuery-File-Upload/) ["FileUpload"]<br>
 [移动端元素选择器(zepto)](http://www.zeptojs.cn/)<br>
 
+### 兼容性
+兼容所有浏览器(包括IE6789)
+
 ### 更新记录
 
 >2016.05.02<br>
 新增指令bb-disabled<br>
 新增指令系统<br>
-新增系统通用方法 this._getField
+新增组件通用方法 this._getField
+新增组件通用方法 this._getBoolean
 
 >2016.05.01<br>
 新增bb-show指令
