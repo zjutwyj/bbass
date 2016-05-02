@@ -177,6 +177,12 @@ bb-model: 模型类字段  后面的:keyup表示按下某个键弹起时触发�
 bb-click="addOne": 事件类型，支持jquery所有的事件
 bb-keyup="addOne:enter$arg1";   当按下回车时触发  $arg1 表示传递给方法的参数，后面可以加多个参数
 ```
+### 系统自带属性
+```js
+bb-checked="checked": 是否选中
+bb-checked="checked_all": 是否全部选中
+bb-checked="result_none": 列表是否为空
+```
 ### 系统自带事件
 ```js
 // BaseItem
@@ -195,12 +201,6 @@ bb-click="_clearChecked": 全不选中  当参数为true时， 忽略diff
 // BaseDetail
 bb-click="_reset": 初始化表单
 bb-click="_save": 保存表单(当需要实时保存且不需要提示“保存成功”时使用)
-```
-### 系统自带属性
-```js
-bb-checked="checked": 是否选中
-bb-checked="checked_all": 是否全部选中
-bb-checked="result_none": 列表是否为空
 ```
 ### 系统自带指令
 ```js
@@ -231,6 +231,7 @@ this._bind(function(){}); // 绑定上下文
 this._initToolTip(parentNode, className); // 添加提示
 this._close(); // 关闭对话框
 this._set('name', 'aaa'); // 设置模型类，可传对象，类似jquery
+this._getField('remaining!== models.length'); => 'remaining'// 获取表达式字段
 ```
 ### 操作模型类
 ```js
@@ -364,3 +365,12 @@ new BaseService().factory({
 [百度编辑器(ueditor)](http://ueditor.baidu.com/website/) ["Ueditor"]<br>
 [图片上传(fileupload)](https://blueimp.github.io/jQuery-File-Upload/) ["FileUpload"]<br>
 [移动端元素选择器(zepto)](http://www.zeptojs.cn/)<br>
+
+### 更新记录
+
+>2016.05.02
+新增指令系统
+新增系统通用方法 this._getField
+
+>2016.05.01
+新增bb-show指令
