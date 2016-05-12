@@ -1,11 +1,11 @@
 /**
  * @description 应用程序管理器 - 中介者模式， 用于注册视图、模块、路由、模板等。
- * 注册视图、注册模块等以抽象工厂模式实现
  * @class BaseApp - 用户后台
  * @author yongjin<zjut_wyj@163.com> 2014/12/28
  */
 var BaseApp = function(options) {
   this.options = options;
+
   Est.extend(this, options);
   this.initialize.apply(this, arguments);
 };
@@ -83,7 +83,8 @@ Est.extend(BaseApp.prototype, {
     }
     this.addPanel(name, {
       el: options.__panelId,
-      template: '<div class="region ' + panel + '"></div>'
+      template: '<div class="region ' + panel + '"></div>',
+      append: options.append
     }, options);
     if (!options.viewId) {
       options.viewId = name;
@@ -121,7 +122,7 @@ Est.extend(BaseApp.prototype, {
       if (options) options.el = panel.$template;
       panel.$template.addClass('__panel_' + name);
       panel.$template.attr('data-view', options.viewId || name);
-      if (options && Est.typeOf(options.append) === 'boolean' && !options.append) $(panel.el).empty();
+      if (!panel.append) $(panel.el).empty();
       $(panel.el).append(panel.$template);
     }
     this.panels[name] = panel;

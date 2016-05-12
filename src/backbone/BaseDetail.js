@@ -102,6 +102,9 @@ var BaseDetail = SuperView.extend({
         afterSave: this.afterSave
       }, this._formList.length > 1 ? this._formList[1] : null);
     }
+
+    this._ready_component_ = true;
+
     BaseUtils.removeLoading();
   },
   /**

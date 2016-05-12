@@ -93,7 +93,7 @@ var BaseList = SuperView.extend({
   _initOpt: function(collection, options) {
 
     this._initOptions(options);
-    this._initDataModel(Backbone.Model.extend({}));
+    this._initDataModel(BaseModel.extend({}));
     this._initTemplate(this._options);
     this._initEnterEvent(this._options, this);
     this._initList(this._options);
@@ -224,7 +224,8 @@ var BaseList = SuperView.extend({
    * @private
    */
   _initCollection: function(options, collection) {
-    if (!this.collection || (this.collection && !this.collection.remove)) this.collection = new collection(options);
+    if (!this.collection || (this.collection && !this.collection.remove))
+      this.collection = new collection(options);
     if (options.itemId) this.collection._setItemId(options.itemId);
     //TODO 分类过滤
     if (options.subRender) this.composite = true;
@@ -313,11 +314,11 @@ var BaseList = SuperView.extend({
     this._beforeLoad(options);
     if (options.page || options.pageSize) {
       if (options.page)
-        ctx.collection.paginationModel.set('page', options.page || 1);
+        ctx._setPage(options.page || 1);
       // 备份page
       options._page = options.page;
       if (options.pageSize)
-        ctx.collection.paginationModel.set('pageSize', options.pageSize || 16);
+        ctx._setPageSize(options.pageSize || 16);
       // 备份pageSize
       options._pageSize = options.pageSize;
       model = ctx.collection.paginationModel;
@@ -333,11 +334,11 @@ var BaseList = SuperView.extend({
     }
     // page pageSize保存到cookie中
     if (this._options.viewId && ctx.collection.paginationModel &&
-      ctx.collection.paginationModel.get('pageSize') < 999) {
+      ctx._getPageSize() < 999) {
       app.addCookie(this._options.viewId + '_page');
-      Est.cookie(this._options.viewId + '_page', ctx.collection.paginationModel.get('page'));
+      Est.cookie(this._options.viewId + '_page', ctx._getPage());
       app.addCookie(this._options.viewId + '_pageSize');
-      Est.cookie(this._options.viewId + '_pageSize', ctx.collection.paginationModel.get('pageSize'));
+      Est.cookie(this._options.viewId + '_pageSize', ctx._getPageSize());
     }
     // 判断是否存在url
     if (ctx.collection.url && !this._options.items) {
@@ -346,12 +347,12 @@ var BaseList = SuperView.extend({
       // 处理树结构
       if (ctx._options.subRender) {
         ctx.composite = true;
-        ctx.collection.paginationModel.set('page', 1);
-        ctx.collection.paginationModel.set('pageSize', 9000);
+        ctx._setPage(1);
+        ctx._setPageSize(9000);
       }
       // 数据载入
       BaseUtils.addLoading()
-      ctx.collection._load(ctx.collection, ctx, model).
+      ctx.collection._load(ctx.collection, ctx, model||this.collection.pagiantionModel).
       done(function(result) {
         if (result && result.msg && result.msg === CONST.LANG.AUTH_FAILED) {
           BaseUtils.tip(CONST.LANG.AUTH_LIMIT + '！', {
@@ -362,12 +363,15 @@ var BaseList = SuperView.extend({
          app.addData(ctx.options.instance, result.models);*/
         ctx.list.find('.no-result').remove();
         try {
+          if (ctx._getTotalPage() === ctx._getPage()) {
+            ctx._set('load_completed', true);
+          }
           if (Est.isEmpty(result) || Est.isEmpty(result.attributes) || result.attributes.data.length === 0) {
             ctx._set('result_none', true);
             ctx._options.append ? ctx.list.append('<div class="no-result">' + CONST.LANG.LOAD_ALL + '</div>') :
               ctx.list.append('<div class="no-result">' + CONST.LANG.NO_RESULT + '</div>');
 
-            if (ctx.collection.paginationModel.get('page') === 1) Est.trigger('resultListNone' + ctx._options.viewId, {});
+            if (ctx._getPage() === 1) Est.trigger('resultListNone' + ctx._options.viewId, {});
             if (result.msg === CONST.LANG.NOT_LOGIN) {
               Est.trigger('checkLogin');
             }
@@ -422,6 +426,7 @@ var BaseList = SuperView.extend({
 
     if (this.afterRender) this.afterRender.call(this, this._options);
     if (this._options.toolTip) this._initToolTip();
+    this._ready_component_ = true;
 
     BaseUtils.removeLoading();
   },
@@ -578,7 +583,8 @@ var BaseList = SuperView.extend({
               roots.push(thisModel);
             }
           } else {
-            if (!Est.isEmpty(item) && thisModel.get(ctx._options.rootId) && thisModel.get(ctx._options.rootId).indexOf(item) > -1) {
+            if (!Est.isEmpty(item) && thisModel.get(ctx._options.rootId) &&
+              thisModel.get(ctx._options.rootId).indexOf(item) > -1) {
               // 判断不为null 且索引是否大于-1
               thisModel.set('level', 1);
               roots.push(thisModel);
@@ -708,7 +714,8 @@ var BaseList = SuperView.extend({
     // 判断第二个参数是否是数字， 否-> 取当前列表的最后一个元素的索引值
     // 判断index是否大于列表长度
     // 若存在items， 则相应插入元素
-    var obj, _index = Est.typeOf(index) === 'number' ? index + 1 : this.collection.models.length === 0 ? 0 : this.collection.models.length + 1;
+    var obj, _index = Est.typeOf(index) === 'number' ? index + 1 :
+      this.collection.models.length === 0 ? 0 : this.collection.models.length + 1;
     var opts = {
       at: _index > this.collection.models.length ?
         this.collection.models.length + 2 : _index
@@ -789,8 +796,8 @@ var BaseList = SuperView.extend({
    * @author wyj 15.1.8
    */
   _renderListByPagination: function() {
-    this.page = this.collection.paginationModel.get('page');
-    this.pageSize = this.collection.paginationModel.get('pageSize');
+    this.page = this._getPage();
+    this.pageSize = this._getPageSize();
     this.startIndex = (this.page - 1) * parseInt(this.pageSize, 10);
     this.endIndex = this.startIndex + parseInt(this.pageSize, 10);
 
@@ -798,7 +805,7 @@ var BaseList = SuperView.extend({
       this.collection.push(this._options.items[i]);
     }
     // 渲染分页
-    this.collection.paginationModel.set('count', this._options.items.length);
+    this._setCount(this._options.items.length);
     this.collection._paginationRender();
     return this.collection;
   },
@@ -828,8 +835,8 @@ var BaseList = SuperView.extend({
     }
     // 设置当前页的起始索引， 如每页显示20条，第2页为20
     if (this.collection.paginationModel) {
-      this.dx = (this.collection.paginationModel.get('pageSize') || 16) *
-        ((this.collection.paginationModel.get('page') - 1) || 0);
+      this.dx = (this._getPageSize() || 16) *
+        ((this._getPage() - 1) || 0);
     }
     //遍历views数组，并对每个view调用Backbone的remove
     Est.each(this.views, function(view) {
@@ -1151,8 +1158,14 @@ var BaseList = SuperView.extend({
     next.view.model.stopCollapse = true;
     // 交换model
     this.collection.models[new_index] = this.collection.models.splice(original_index, 1, this.collection.models[new_index])[0];
-    temp.view.model.set(tempObj);
-    next.view.model.set(nextObj);
+    if (temp.view.diff) {
+      temp.view.model._set(tempObj);
+      next.view.model._set(nextObj);
+    } else {
+      temp.view.model.set(tempObj);
+      next.view.model.set(nextObj);
+    }
+
     // 交换位置
     if (original_index < new_index) {
       temp.view.$el.before(next.view.$el).removeClass('hover');
@@ -1213,7 +1226,8 @@ var BaseList = SuperView.extend({
           //this._saveSort(nextNode);
           this._saveSorts(thisNode, {
             ids: thisNode.get('id') + ',' + nextNode.get('id'),
-            sorts: thisNode.get(this._options.sortField || 'sort') + ',' + nextNode.get(this._options.sortField || 'sort')
+            sorts: thisNode.get(this._options.sortField || 'sort') + ',' +
+              nextNode.get(this._options.sortField || 'sort')
           });
           thisNode.stopCollapse = false;
           nextNode.stopCollapse = false;
@@ -1261,7 +1275,8 @@ var BaseList = SuperView.extend({
           //this._saveSort(nextNode);
           this._saveSorts(thisNode, {
             ids: thisNode.get('id') + ',' + nextNode.get('id'),
-            sorts: thisNode.get(this._options.sortField || 'sort') + ',' + nextNode.get(this._options.sortField || 'sort')
+            sorts: thisNode.get(this._options.sortField || 'sort') + ',' +
+              nextNode.get(this._options.sortField || 'sort')
           });
           thisNode.stopCollapse = false;
           nextNode.stopCollapse = false;
@@ -1447,5 +1462,26 @@ var BaseList = SuperView.extend({
         Est.trigger(model.view.cid + 'checked', 'checked');
       }
     });
+  },
+  _getPage: function() {
+    return this.collection.paginationModel.get('page');
+  },
+  _setPage: function(page) {
+    this.collection.paginationModel.set('page', page);
+  },
+  _getTotalPage: function() {
+    return this.collection.paginationModel.get('totalPage');
+  },
+  _getCount: function() {
+    return this.collection.paginationModel.get('count');
+  },
+  _setCount: function(count) {
+    this.collection.paginationModel.set('count', count);
+  },
+  _getPageSize: function() {
+    return this.collection.paginationModel.get('pageSize');
+  },
+  _setPageSize: function(pageSize) {
+    this.collection.paginationModel.set('pageSize', pageSize);
   }
 });

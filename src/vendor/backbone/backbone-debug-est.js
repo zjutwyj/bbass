@@ -264,6 +264,9 @@
       delete result._data;
       delete result._isAdd;
       delete result.models;
+      delete result.load_completed;
+      delete result.result_none;
+
       if (_.typeOf(options) !== 'boolean'){
         delete result.checked;
         delete result.checked_all;
@@ -1079,6 +1082,8 @@
       delete _attrs._isAdd;
       delete _attrs.checked;
       delete _attrs.checked_all;
+      delete _attrs.load_completed;
+      delete _attrs.result_none;
       delete _attrs.children;
       delete _attrs._options;
       delete _attrs.models;

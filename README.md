@@ -53,8 +53,8 @@ var Module = BaseView.extend({
       data: {} // 传递给模型类的数据
 
       // 约定事件
-      onChange: fucntion(){}, // 手动调用
-      setValue: function(val){}, // 为组件赋值
+      setValue: function(val){}, // 手动为组件赋值，内可加逻辑代码
+      onChange: fucntion(){}, // 手动调用，内可加逻辑代码
       onUpdate: function(){}, // 当模型类改变时系统会实时调用这个回调
 
       // BaseList 部分
@@ -123,14 +123,11 @@ var Module = BaseView.extend({
   // 组件渲染后
   afterRender: function(){},
 
-  // 监听的字段改变时回调(区别于onUpdate)
+  // 监听的字段改变时回调
   update: function(name){},
 
-  // 当模型类发生改变时，此方法一般写在调用组件时的参数配置里，同onChange
-  onUpdate: fucntion(model){},
-
-  // 自定义change事件
-  onChange: function(model){},
+  // 当模型类改变时系统会实时调用这个回调 (注：状态字段改变时也会触发此方法)
+  change: fucntion(){},
 
   // 模型类保存前
   beforeSave: function(){},
@@ -169,7 +166,7 @@ bb-change: 事件函数(其中参数为改变的字段名称)<br>
 ### 表单元素双向绑定
 <input bb-model="name:keyup" type="text" class="text" value="{{name}}" />
 ```js
-bb-model: 模型类字段  后面的:keyup表示按下某个键弹起时触发，默认为:change
+bb-model: 模型类字段  后面的:keyup表示按下某个键弹起时触发，默认为:change (注：建议添加value="{{name}}",懒执行，提高性能)
 ```
 ### 事件绑定
 <input bb-click="handleAdd" type="button" value="添加表单" class="abutton faiButton faiButton-hover" />
@@ -210,7 +207,7 @@ bb-disabled="models.length"
 ```
 ### 组件通用方法
 ```js
-this._super(type); // 引用父类，当参数type为view时返回上级视图 model时返回上级模型类，data上级模型类数据,"_init" 执行上级方法,对象时调用父级的_initialize()方法
+this._super(type); // 引用父类，当参数type为view时返回上级视图 model时返回上级模型类，data上级模型类数据,options返回上级参数,"_init" 执行上级方法,为对象时调用父级的_initialize()方法
 this._view('viewId');// 获取视图
 this._region('name', ProductList, {}); // 添加视图区域
 this._service('productList').then(function(result){}); // 数据请求服务
@@ -267,13 +264,23 @@ this._getPage(); //获取当前列表第几页
 ### 列表操作
 ```js
 this._push(model, dx); // model可为object对象或new model()对象， dx为插入的索引值，不填默认插入到尾部
-this._getLength(); // 获取列表长度
+this._remove(start, end); // 移除元素
 this._insertOrder(evt.oldIndex, evt.newIndex, function(list) {}); //插序排序
+
 this._getItems(); // 获取全部列表
 this._getItem(index); // 获取第index项
 this._getCheckedItems(isPluck); // 获取选中的列表项 isPluck为true时自动转化为model.toJSON()对象
 this._getCheckboxIds(); // 获取选中项的ids数组
-this._remove(start, end); // 移除元素
+
+this._getPage(); // 获取当前第几页
+this._setPage(5);// 设置当前第几页
+this._getPageSize();// 获取每页个数
+this._setPageSize(16);// 设置每页个数
+this._getCount();// 获取总个数
+this._setCount(5);// 设置总个数
+this._getTotalPage();// 获取总页数
+this._getLength(); // 获取列表长度
+
 this._batch({  // 批量操作
     url: CONST.API + '/message/batch/del',
     tip: '删除成功'
@@ -392,6 +399,14 @@ new BaseService().factory({
 兼容所有浏览器(包括IE6789)
 
 ### 更新记录
+>2016.05.04<br>
+新增this._super “options”参数类型
+
+>2016.05.03<br>
+新增列表方法 this._getPage与this._setPage<br>
+this._getCount,this._setCount<br>
+this._getPageSize,this._setPageSize<br>
+this._getTotalPage
 
 >2016.05.02<br>
 新增指令 bb-disabled<br>

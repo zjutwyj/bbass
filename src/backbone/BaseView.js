@@ -40,7 +40,7 @@ var BaseView = SuperView.extend({
   _initialize: function(options) {
     this._initOptions(options);
     this._initTemplate(this._options.template);
-    this._initModel(this._options.data, Backbone.Model.extend({
+    this._initModel(this._options.data, BaseModel.extend({
       fields: this._options.fields
     }));
     this._initBind(this._options);
@@ -115,6 +115,7 @@ var BaseView = SuperView.extend({
     if (this._options.toolTip) this._initToolTip();
 
     this._initEnterEvent(this._options);
+    this._ready_component_ = true;
     BaseUtils.removeLoading();
   },
   render: function() {

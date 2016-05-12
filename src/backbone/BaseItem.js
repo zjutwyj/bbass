@@ -292,6 +292,8 @@ var BaseItem = SuperView.extend({
     if (this.afterRender) this.afterRender.call(this, this.model);
     if (this._watchBind) this._watchBind.call(this, this._options.template);
     if (this._bbBind) this._bbBind.call(this, this._options.template, this.$el);
+
+    this._ready_component_ = true;
   },
   /**
    * 移除监听

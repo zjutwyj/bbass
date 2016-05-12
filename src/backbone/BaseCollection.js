@@ -79,8 +79,8 @@ var BaseCollection = Backbone.Collection.extend({
     this._baseUrl = this.url;
     if (!this.paginationModel) {
       this.paginationModel = new PaginationModel({
-        page: this.options.page,
-        pageSize: this.options.pageSize
+        page: this.options.page || 1,
+        pageSize: this.options.pageSize || 16
       });
     }
   },
@@ -101,6 +101,9 @@ var BaseCollection = Backbone.Collection.extend({
     var ctx = this;
     if (Est.isEmpty(resp)) {
       return [];
+    }
+    if (!resp.success && resp.msg) {
+      BaseUtils.tip(resp.msg, { zIndex: 5000 });
     }
     this._parsePagination(resp);
     this._parseUrl(this.paginationModel);
@@ -150,9 +153,9 @@ var BaseCollection = Backbone.Collection.extend({
       count: 10
     };
     if (this.paginationModel) {
-      this.paginationModel.set('page', resp.attributes.page);
-      this.paginationModel.set('pageSize', resp.attributes.per_page);
-      this.paginationModel.set('count', resp.attributes.count);
+      this.paginationModel.set('page', resp.attributes.page || 1);
+      this.paginationModel.set('pageSize', resp.attributes.per_page || 16);
+      this.paginationModel.set('count', resp.attributes.count || 1);
     }
   },
   /**
@@ -164,6 +167,7 @@ var BaseCollection = Backbone.Collection.extend({
    */
   _paginationRender: function() {
     seajs.use(['Pagination'], Est.proxy(function(Pagination) {
+      if (!Pagination) return;
       if (!this.pagination) {
         var $el = $(this.options.el);
         var isStr = Est.typeOf(this.options.pagination) === 'string';

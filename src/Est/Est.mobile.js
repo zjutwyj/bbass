@@ -520,6 +520,82 @@
   Est.findIndex = findIndex;
 
 
+    /**
+   * @description cookie
+   * @method [浏览器] - cookie ( cookie )
+   * @param key
+   * @param value
+   * @param options
+   * @author wyj 15.1.8
+   * @example
+   *      Est.cookie('the_cookie'); // 读取 cookie
+   *      Est.cookie('the_cookie', 'the_value'); // 存储 cookie
+   *      Est.cookie('the_cookie', 'the_value', { expires: 7 }); // 存储一个带7天期限的 cookie
+   *      Est.cookie('the_cookie', '', { expires: -1 }); // 删除 cookie
+   *      Est.cookie(’name’, ‘value’, {expires: 7, path: ‘/’, domain: ‘jquery.com’, secure: true}); //新建一个cookie 包括有效期 路径 域名等
+   */
+  function cookie(key, value, options) {
+    var parseCookieValue = null;
+    var read = null;
+    try {
+      var pluses = /\+/g;
+
+      parseCookieValue = function(s) {
+        if (indexOf(s, '"') === 0) {
+          s = s.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+        }
+        try {
+          s = decodeUrl(s.replace(pluses, ' '));
+          return s;
+        } catch (e) {}
+      }
+
+      read = function(s, converter) {
+        var value = parseCookieValue(s);
+        return typeOf(converter) === 'function' ? converter(value) : value;
+      }
+
+      // 写入
+      if (arguments.length > 1 && typeOf(value) !== 'function') {
+        options = extend({}, options);
+
+        if (typeof options.expires === 'number') {
+          var days = options.expires,
+            t = options.expires = new Date();
+          t.setTime(+t + days * 864e+5);
+        }
+        return (document.cookie = [
+          encodeUrl(key), '=', encodeUrl(value),
+          options.expires ? '; expires=' + options.expires.toUTCString() : '', // use expires attribute, max-age is not supported by IE
+          options.path ? '; path=' + options.path : '',
+          options.domain ? '; domain=' + options.domain : '',
+          options.secure ? '; secure' : ''
+        ].join(''));
+      }
+      // 读取
+      var result = key ? undefined : {};
+      var cookies = document.cookie ? document.cookie.split('; ') : [];
+      each(cookies, function(item) {
+        var parts = item.split('=');
+        var name = decodeUrl(parts.shift());
+        var cookie = parts.join('=');
+        if (key && key === name) {
+          result = read(cookie, value);
+          return false;
+        }
+        if (!key && (cookie = read(cookie)) !== undefined) {
+          result[name] = cookie;
+        }
+      });
+      return result;
+    } catch (e) {
+      return;
+    }
+  }
+
+  Est.cookie = cookie;
+
+
   //================================================================
   /**
    * @description 织入模式 - 实用程序函数扩展Est。

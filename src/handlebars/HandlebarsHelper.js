@@ -354,6 +354,7 @@ Handlebars.registerHelper('stripScripts', function(str, options) {
  *    {{replace module.type '\d*$' ''}}
  */
 Handlebars.registerHelper('replace', function(val1, reg, val2, options) {
+  if (Est.isEmpty(val1)){ return val1}
   return val1.replace(new RegExp(reg, 'img'), val2);
 });
 

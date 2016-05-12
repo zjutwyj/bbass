@@ -75,9 +75,9 @@ var BaseUtils = {
       };
       if (options.cover) {
         //options.quickClose = false;
-        app.addDialog(dialog(options), options.viewId || options.id).showModal(options.target);
+        app.addDialog(dialog(options), options.viewId || options.dialogId).showModal(options.target);
       } else {
-        app.addDialog(dialog(options), options.viewId || options.id).show(options.target);
+        app.addDialog(dialog(options), options.viewId || options.dialogId).show(options.target);
       }
     });
   },
@@ -173,10 +173,10 @@ var BaseUtils = {
   addLoading: function(options) {
     try {
       if (window.$loading) window.$loading.remove();
-      window.$loading = $('<div id="loading" class="loading"><div class="object" id="object_one"></div><div class="object" id="object_two"></div><div class="object" id="object_three"></div></div>');
+      window.$loading = $('<div id="loading" class="loading"><div class="object" id="object_one">' +
+        '</div><div class="object" id="object_two"></div><div class="object" id="object_three"></div></div>');
       $('body').append(window.$loading);
-    } catch (e) {
-    }
+    } catch (e) {}
     return window.$loading;
   },
   /**
