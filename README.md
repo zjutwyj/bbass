@@ -164,7 +164,7 @@ bb-render: 需要重新渲染的元素或属性，后面带:style(样式) :class
 bb-change: 事件函数(其中参数为改变的字段名称)<br>
 
 ### 表单元素双向绑定
-<input bb-model="name:keyup" type="text" class="text" value="{{name}}" />
+<input bb-model="name:keyup" type="text" class="text" />
 ```js
 bb-model: 模型类字段  后面的:keyup表示按下某个键弹起时触发，默认为:change (注：建议添加value="{{name}}",懒执行，提高性能)
 ```
@@ -312,16 +312,13 @@ this.collection.each(function(model){
 ```js
 app.addDirective('disabled', {
   bind: function(value, selector) {
-    var compile = Est.compile('{{' + value + '}}');
-    var bool = this._getBoolean(compile(this.model.attributes));
-    this._watch([this._getField(value)], '[bb-disabled="' + value + '"]:disabled');
-    this.$(selector).prop('disabled', bool);
-
+    this._watch([this._getField(value)], selector + ':disabled');
+    this.$(selector).prop('disabled', this._getBoolean(value));
     return {
-      compile: compile
+      compile: Est.compile('{{' + value + '}}')
     }
   },
-  replace: function(name, node, selector, result) {
+  update: function(name, node, selector, result) {
     node.prop('disabled', this._getBoolean(result));
   }
 });
@@ -399,6 +396,9 @@ new BaseService().factory({
 兼容所有浏览器(包括IE6789)
 
 ### 更新记录
+>2016.05.18<br>
+修复并优化bb-show,bb-model指令
+
 >2016.05.04<br>
 新增this._super “options”参数类型
 

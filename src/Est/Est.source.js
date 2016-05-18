@@ -624,7 +624,8 @@
     function get(object, array) {
       if (isEmpty(object)) return null;
       each(array, function(key) {
-        if (typeOf(object) === 'string'){return false;}
+        if (typeOf(object) === 'string') {
+          return false; }
         if (key in object) {
           if (array.length === 1) {
             // 如果为数组最后一个元素， 则返回值
@@ -782,7 +783,10 @@
    *        Est.hash('aaaaa');
    */
   function hash(str) {
+
     try {
+      if (!str) {
+        return null; }
       var hash = 5381,
         i = str.length;
       while (i)

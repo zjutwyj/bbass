@@ -289,8 +289,8 @@ var SuperView = Backbone.View.extend({
         node.html(result);
         break;
       case 'show':
-        if ((result === 'false' || result === '0' || Est.isEmpty(result)) && !node.is(":hidden")) node.hide();
-        else if (node.is(":hidden")) node.show();
+        if ((result === 'false' || result === '0' || Est.isEmpty(result))) node.hide();
+        else node.show();
         break;
       case 'checked':
         //node.prop('checked', this._get(/bb-checked=\"(.*?)\"\s?/img.exec(selector)[1]));
@@ -392,8 +392,10 @@ var SuperView = Backbone.View.extend({
         } else if (item.indexOf(']') > -1 && item.indexOf('[bb-') === -1) {
           temp += (',' + item);
           list2.push(temp);
-        } else if (!Est.isEmpty(item)) {
+        } else if (item.indexOf('[bb-') > -1 && item.indexOf(']') > -1) {
           list2.push(item);
+        } else if (item.indexOf('[bb-') === -1 && item.indexOf(']') === -1){
+          temp += (',' + item);
         }
       });
     } else {
@@ -717,6 +719,7 @@ var SuperView = Backbone.View.extend({
           case 'model':
             this._modelBind(parent, '[bb-model="' + item.value + '"]');
             this._watch([item.value.split(':')[0]], '[bb-model="' + item.value + '"]:value');
+            this.$('[bb-model="' + item.value + '"]').val(this._get(item.value.split(':')[0]));
             break;
           case 'checked':
             this._watch([item.value], '[bb-checked="' + item.value + '"]:checked');
@@ -1043,7 +1046,6 @@ var SuperView = Backbone.View.extend({
     var result = "";
     var result1 = "{";
     var items = [];
-
     var str = str.replace(/'/img, '@');
     var compile = Est.compile(str);
 
