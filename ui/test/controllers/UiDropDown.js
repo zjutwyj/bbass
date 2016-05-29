@@ -21,6 +21,7 @@ define('UiDropDown', ['template/ui_drop_down', 'DropDown'], function(require, ex
         el: 'body',
         target: this.$('#ui-drop_down_normal'),
         content: 'aaaa',
+        append: true,
         callback: function(options) {
           setTimeout(function() {
             console.dir(options);
@@ -29,6 +30,7 @@ define('UiDropDown', ['template/ui_drop_down', 'DropDown'], function(require, ex
       });
       app.addRegion('dropDownModule', DropDown, {
         el: 'body',
+        append: true,
         target: this.$('#ui-drop_down_module'),
         moduleId: 'UiTab'
       });
@@ -36,12 +38,14 @@ define('UiDropDown', ['template/ui_drop_down', 'DropDown'], function(require, ex
         el: 'body',
         target: this.$('#ui-drop_down_mouse'),
         moduleId: 'UiTab',
+        append: true,
         mouseFollow: true
       });
       app.addRegion('dropDownHover', DropDown, {
         el: 'body',
         target: this.$('#ui-drop_down_hover'),
         moduleId: 'UiTab',
+        append: true,
         mouseHover: true,
         mouseFollow: true
       });

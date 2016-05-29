@@ -16,10 +16,24 @@ define('UiTodoMvc', ['template/ui_todo_mvc'], function(require, exports, module)
     tagName: 'li',
     className: 'todo',
     diff: true, // 取消dx 监视
+
     onWatch: function() {
       this._watch(['completed'], '', function() {
-        this._super('view').remaining();
+        this._super('view').handleChange('item');
       });
+    },
+
+    editTodo: function() {
+      this.beforeEditCache = this._get('title');
+      this.$el.addClass('editing');
+      this.$('.edit').focus();
+    },
+
+    doneEdit: function() {
+      if (Est.isEmpty(this._get('title'))) {
+        this._remove(this._get('dx'));
+      }
+      this.$el.removeClass('editing');
     }
   });
 
@@ -31,8 +45,7 @@ define('UiTodoMvc', ['template/ui_todo_mvc'], function(require, exports, module)
         collection: collection,
         item: item,
         render: '.todo-list',
-        //items: todoStorage.fetch()
-        items: []
+        items: [{title: 'aaa'},{title: 'bbb'}]
       });
     },
 
@@ -45,10 +58,13 @@ define('UiTodoMvc', ['template/ui_todo_mvc'], function(require, exports, module)
     },
 
     onWatch: function() {
-      this._watch(['models'], '', this.remaining);
+      this._watch(['models'], '', this.handleChange);
     },
 
     checkAll: function() {
+      if (this._get('checkType') === 'item') {
+        return;
+      }
       this.collection.each(this._bind(function(model) {
         model._set('completed', this._get('allDone'));
       }));
@@ -56,7 +72,9 @@ define('UiTodoMvc', ['template/ui_todo_mvc'], function(require, exports, module)
 
     changeRoute: function(type) {
       this._set('visibility', type);
-      BaseUtils.removeLoading();
+      this._setDefault('originList', this._getItems());
+      this.collection._set(this._get('originList'));
+      this.collection._set(this[type]());
     },
 
     all: function() {
@@ -75,16 +93,17 @@ define('UiTodoMvc', ['template/ui_todo_mvc'], function(require, exports, module)
       });
     },
 
-    remaining: function() {
+    handleChange: function(type) {
       this._set('remaining', this.active().length);
+      this._set('checkType', type);
       this._set('allDone', this._get('remaining') === 0);
+      this._delay(function() { this._set('checkType', 'all'); }, 50);
     },
 
     removeCompleted: function() {
       this.collection._set(this.active());
     },
 
-    // 添加列表
     addTodo: function(e, name, value) {
       var value = Est.trim(this._get('newTodo'));
       if (!value) {

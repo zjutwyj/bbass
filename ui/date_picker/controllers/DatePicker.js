@@ -1,3 +1,4 @@
+'use strict';
 /**
  * @description 模块功能说明
  * @class ModuleName

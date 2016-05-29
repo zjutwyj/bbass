@@ -1,3 +1,4 @@
+'use strict';
 /**
  * @description 样式选择
  * @class UI - ui库
@@ -40,7 +41,7 @@ define('ItemCheck', [], function(require, exports, module) {
         $(this._options.data.target).val(this._checkAppend && this._super('view') ?
           this._super('view').getAppendValue() : this._get('value'));
       }
-      this.result = this.options.data.onChange.call(this, this.model.attributes, init, e);
+      this.result = this.options.data.onChange.call(this, this.model.attributes, init, e, (init ? this._super('options').cur : this._super('view').getValue()));
       if (Est.typeOf(this.result) === 'boolean' && !this.result) return false;
     }
   });

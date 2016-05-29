@@ -1,3 +1,4 @@
+'use strict';
 /**
  * @description 下拉菜单
  * @class UI - ui库
@@ -236,6 +237,7 @@ define('Select', [], function(require, exports, module) {
       var viewId = this._options.viewId;
       app.addPanel('select-' + viewId, {
         el: 'body',
+        append: true,
         template: '<div class="select-container-' + viewId + '"></div>'
       });
       this.selectNode = new list({

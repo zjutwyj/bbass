@@ -1,3 +1,4 @@
+'use strict';
 /**
  * @description Pagination
  * @class UI - ui库

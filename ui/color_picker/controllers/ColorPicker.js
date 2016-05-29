@@ -1,3 +1,4 @@
+'use strict';
 /**
  * @description ColorPicker
  * @class UI - ui库

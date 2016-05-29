@@ -1,3 +1,14 @@
+### 基于Backbone的MVPVM架构
+
+### Bbass特色
+- Restful风格
+- 组件多态(普通视图、列表视图、表单视图)
+- 与jQuery、Zepto良好集成,无须再造轮子，加快产品开发与迭代
+- 兼容IE6789
+- 懒绑定，只有当模型类改变时触发绑定,加快装载速度
+- 易与目前主流视图库vue,react集成
+- 按需加载
+
 ### 组件类型
 ```js
 // 普通视图
@@ -6,31 +17,27 @@ var BaseView = BaseView.extend({
 });
 
 // 列表视图
-var model = BaseModel.extend({});
-var collection = BaseCollection.extend({
-  model: model // 此项必需
-});
-var item = BaseItem.extend({
-  tagName: 'li',
-  className: 'item-li'
-});
 var list = BaseList.extend({
   initialize: fucntion(){
     this._super({
-      model: model,
-      collection: collection,
-      item: item,
-      render: '.list'
+      model: BaseModel.extend({}),
+      collection: BaseCollection.extend({
+        model: this.model // 此项必需
+      }),
+      item: BaseItem.extend({
+        tagName: 'li',
+        className: 'item-li'
+      }),
+      render: '.list' // 需要把列表渲染到当前视图中的某个位置
     });
   }
 });
 
 // 表单提交视图
-var model = BaseModel.extend({});
 var detail = BaseDetail.extend({
   initialize: fucntion(){
     this._super({
-      model: model,
+      model: BaseModel.extend({}),
       form: '.form#submit'
     });
   }
@@ -48,7 +55,7 @@ var Module = BaseView.extend({
       // 通用部分
       template: template, // 字符串模板
       modelBind: true,    // 主要用于表单改变时及时更新到模型类中，默认为change改变， 若想及时更新可以使用  data-bind-type="keyup" 表示按下键盘时触发(推荐使用bb-model="name:keyup")
-      toolTip: true, // 是否显示title提示框   html代码： <div class="tool-tip" title="提示内容">内容</div>
+      toolTip: true, // 是否显示title提示框   html代码： <div class="tool-tip" data-title="提示内容">内容</div>
       enter: '#submit' // 执行回车后的按钮点击的元素选择符
       data: {} // 传递给模型类的数据
 
@@ -308,7 +315,7 @@ this.collection.each(function(model){
 ### 工具类库
 详见doc文档
 
-### 组件指令
+### 组件指令 (具体使用详见app/scripts/directives/directive.js)
 ```js
 app.addDirective('disabled', {
   bind: function(value, selector) {
@@ -320,6 +327,9 @@ app.addDirective('disabled', {
   },
   update: function(name, node, selector, result) {
     node.prop('disabled', this._getBoolean(result));
+  },
+  unbind: function(){
+    ...
   }
 });
 ```
@@ -333,19 +343,23 @@ app.addDirective('disabled', {
 
 {{get 'args.color'}} // 取值
 {{dateFormat addTime 'yyyy-MM-dd mm:hh:ss'}} // 日期格式化
+{{replace module.type '\d*$' ''}} // 替换
+{{default module.type 'aa'}} // 取默认值
+
 {{plus 1 2}} => 3 // 相加
 {{minus 10 5}} => 5 // 相减
+
 {{cutByte name 5 end='...'}} // 字符串截取
 {{parseInt 01}} // 转化为数字
-{{CONST 'HOST'}} // 获取常量值
+{{CONST 'HOST'}} // 获取常量值(具体内容详见app/scripts/const/const.js)
 {{PIC pic}} // 获取图片地址   {{PIC pic 120}} // 获取宽度为120图片，目前只能取120与640两种尺寸大小的图片
 {{encodeUrl url}} // 编码地址
 {{json 'invite.title'}} // parse json对象
 {{version}} // 获取版本号
 {{stripScripts '<scripts></scripts>'}} //去除script标签
-{{replace module.type '\d*$' ''}} // 替换
-{{default module.type 'aa'}} // 取默认值
+
 {{keyMap module.type 'aa'}} // key value 映射
+{{fontSize value}} // 状态映射(具体内容详见app/scripts/status/status.js)
 ```
 ### BaseService数据请求服务(具体使用详见/app/scripts/service/Service.js)
 ```js

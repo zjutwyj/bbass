@@ -18,6 +18,8 @@ define('UiTest', ['template/ui_test', 'Tab'], function(require, exports, module)
     },
     afterRender: function() {
       var items = [
+        { text: 'directive', moduleId: 'UiDirective', oneRender: false },
+        { text: 'bbass+vue', moduleId: 'UiVue', oneRender: false },
         { text: 'TodoMvc', moduleId: 'UiTodoMvc', oneRender: false },
         { text: 'Diff测试', moduleId: 'UiDiff', oneRender: false },
         { text: '分页列表', moduleId: 'UiList', oneRender: false },
@@ -39,7 +41,7 @@ define('UiTest', ['template/ui_test', 'Tab'], function(require, exports, module)
       app.addRegion('testNav', Tab, {
         tpl: '<a href="javascript:;" class="tool-tip" data-title="{{text}}">{{text}}</a>', // 模版
         el: this.$('#test-nav'), // 插入点
-        cur: 'UiTodoMvc', // 显示当前项内容
+        cur: 'UiDirective', // 显示当前项内容
         theme: 'tab-ul-line', // 样式：目前有tab-ul-normal,tab-ul-text,tab-ul-btn,tab-ul-line
         path: 'moduleId', // 作用域字段
         toolTip: true,

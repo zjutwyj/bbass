@@ -78,6 +78,7 @@ input[type="checkbox"] {
   outline: none;
   color: inherit;
   padding: 6px;
+  height:54px;
   border: 1px solid #999;
   box-shadow: inset 0 -1px 5px 0 rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
@@ -136,6 +137,8 @@ label[for='toggle-all'] {
   position: relative;
   font-size: 24px;
   border-bottom: 1px solid #ededed;
+  height:60px;
+  overflow:hidden;
 }
 
 .todo-list li:last-child {
@@ -143,7 +146,7 @@ label[for='toggle-all'] {
 }
 
 .todo-list li.editing {
-  border-bottom: none;
+  border-bottom: 1px solid #fff;
   padding: 0;
 }
 
@@ -356,6 +359,10 @@ html .clear-completed:active {
     bottom: 10px;
   }
 }
+
+.clear-completed:disabled {
+  color: #dfdfdf;
+}
 </style>
 <section class="todoapp">
   <header class="header">
@@ -364,13 +371,13 @@ html .clear-completed:active {
   </header>
   <section class="main" bb-show="models.length">
     <input class="toggle-all" type="checkbox" bb-model="allDone" bb-change="checkAll">
-    <ul class="todo-list">
+    <ul class="todo-list" bb-sortable="{handle: '.todo', draggable: '.todo'}">
       <div class="view">
         <input class="toggle" type="checkbox" bb-model="completed">
-        <label bb-watch="completed:class,title:html" class="{{#if completed}}completed{{/if}}">{{title}}</label>
+        <label bb-watch="completed:class,title:html" class="{{#if completed}}completed{{/if}}" bb-dblclick="editTodo">{{title}}</label>
         <button class="destroy" bb-click="_remove"></button>
       </div>
-      <input class="edit" type="text" bb-model="title">
+      <input class="edit" type="text" bb-model="title" value="{{title}}" bb-blur="doneEdit" bb-keyup="doneEdit:enter">
     </ul>
   </section>
   <footer class="footer" bb-show="models.length">
@@ -378,11 +385,11 @@ html .clear-completed:active {
           <strong bb-watch="remaining:html">{{remaining}}</strong> items left
         </span>
     <ul class="filters">
-      <li><a href="#/todo_all" bb-watch="visibility:class" class="{{#compare visibility '===' 'all'}}selected{{/compare}}">All</a></li>
-      <li><a href="#/todo_active" bb-watch="visibility:class" class="{{#compare visibility '===' 'active'}}selected{{/compare}}">Active</a></li>
-      <li><a href="#/todo_completed" bb-watch="visibility:class" class="{{#compare visibility '===' 'completed'}}selected{{/compare}}">Completed</a></li>
+      <li><a href="javascript:;" bb-click="changeRoute$all" bb-watch="visibility:class" class="{{#compare visibility '===' 'all'}}selected{{/compare}}">All</a></li>
+      <li><a href="javascript:;" bb-click="changeRoute$active" bb-watch="visibility:class" class="{{#compare visibility '===' 'active'}}selected{{/compare}}">Active</a></li>
+      <li><a href="javascript:;" bb-click="changeRoute$completed" bb-watch="visibility:class" class="{{#compare visibility '===' 'completed'}}selected{{/compare}}">Completed</a></li>
     </ul>
-    <button class="clear-completed" bb-show="remaining !== models.length" bb-click="removeCompleted">
+    <button class="clear-completed" bb-disabled="remaining===models.length" bb-click="removeCompleted">
       Clear completed
     </button>
   </footer>

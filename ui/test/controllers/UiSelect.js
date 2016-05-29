@@ -26,6 +26,7 @@ define('UiSelect', ['template/ui_select', 'UiData', 'Select', 'ItemCheck'], func
       app.addRegion('select1', Select, {
         el: this.$('#ui-select'),
         target: '#model-categoryId1',
+        append: true, // 当出现target参数时， 此项必需
         text: 'name',
         value: 'categoryId',
         items: list,
@@ -37,6 +38,7 @@ define('UiSelect', ['template/ui_select', 'UiData', 'Select', 'ItemCheck'], func
       app.addRegion('select2', Select, {
         el: this.$('#ui-select-tree'),
         target: '#model-categoryId2',
+        append: true, // 当出现target参数时， 此项必需
         text: 'text',
         width: 200,
         value: 'categoryId',
