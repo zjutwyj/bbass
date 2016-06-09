@@ -6,7 +6,7 @@
 - 与jQuery、Zepto良好集成,无须再造轮子，加快产品开发与迭代
 - 兼容IE6789
 - 懒绑定，只有当模型类改变时触发绑定,加快装载速度
-- 易与目前主流视图库vue,react集成
+- 易与目前主流视图库vue,react集成,当遇到复杂应用时可随时切换
 - 按需加载
 
 ### 组件类型
@@ -42,8 +42,8 @@ var detail = BaseDetail.extend({
     });
   }
 });
-
 ```
+
 ### 组件生命周期及初始配置参数说明
 ```js
 var Module = BaseView.extend({
@@ -79,7 +79,6 @@ var Module = BaseView.extend({
       max: 5, // 限制显示个数
       sortField: 'sort', // 上移下移字段名称， 默认为sort
       itemId: 'Category_00000000000123', // 当需要根据某个ID查找列表时， 启用此参数， 方便
-      filter: [ {key: 'name', value: this.searchKey }] // 过滤结果
       cache: true, // 数据缓存到内存中
       session: true, // 数据缓存到浏览器中，下次打开浏览器，请求的数据直接从浏览器缓存中读取
       // 以下为树型列表时 需要的参数
@@ -136,6 +135,9 @@ var Module = BaseView.extend({
   // 当模型类改变时系统会实时调用这个回调 (注：状态字段改变时也会触发此方法)
   change: fucntion(){},
 
+  // 过滤操作
+  filter: function(){},
+
   // 模型类保存前
   beforeSave: function(){},
 
@@ -147,11 +149,13 @@ var Module = BaseView.extend({
 
 });
 ```
+
 ### 组件ID
 ```js
 this.viewId // 指定ID， 可以用this._view(this.viewId)获取
 this.cid // 唯一标识符， 由系统生成
 ```
+
 ### 组件重渲染
 ```js
 this._region('imagePickerConfig', ImagePickerConfig, {
@@ -161,10 +165,12 @@ this._region('imagePickerConfig', ImagePickerConfig, {
   onChange: this._bind(this._set) // 组件模型类改变回调
 });
 ```
+
 ### 数据绑定
 ```html
 <div class=".bind" bb-watch="args.name" bb-render=".bind:style" bb-change="handleChange" style="display: {{#compare args.name '===' 'show'}}block;{{else}}none;{{/compare}}"></div>
 ```
+
 >bb-watch:  监听的字段，多个字段以逗号隔开(当只要渲染当前元素时， 可以使用bb-watch="args.name:style"简写,多个字段以逗号隔开，错误写法bb-watch="args.name,args.color:style:html",正确写法：bb-watch="args.name:style,args.color:html")<br>
 bb-render: 需要重新渲染的元素或属性，后面带:style(样式) :class(属性) :html(内容) :value(表单)若不带则整个dom替换掉
            当同一个元素带多个属性时，可简写为.bind:style:html:class<br>
@@ -175,18 +181,23 @@ bb-change: 事件函数(其中参数为改变的字段名称)<br>
 ```js
 bb-model: 模型类字段  后面的:keyup表示按下某个键弹起时触发，默认为:change (注：建议添加value="{{name}}",懒执行，提高性能)
 ```
+
 ### 事件绑定
 <input bb-click="handleAdd" type="button" value="添加表单" class="abutton faiButton faiButton-hover" />
 ```js
 bb-click="addOne": 事件类型，支持jquery所有的事件
-bb-keyup="addOne:enter$arg1";   当按下回车时触发  $arg1 表示传递给方法的参数，后面可以加多个参数
+bb-keyup="addOne:enter$arg1";   当按下回车时触发  $arg1 表示传递给方法的参数，后面可以加多个参数(注：event永远在最后)
+bb-keyup="addOne:enter('arg1', name)"; // 当不加单引号时，表示从模型类里取值
+bb-keyup="addOne:13";// 当e.keyCode = 13时，调用方法addOne  常用keyCode表:http://www.cambiaresearch.com/articles/15/javascript-key-codes
 ```
+
 ### 组件自带属性
 ```js
 bb-checked="checked": 是否选中
 bb-checked="checked_all": 是否全部选中
 bb-checked="result_none": 列表是否为空
 ```
+
 ### 组件自带事件
 ```js
 // BaseItem
@@ -201,44 +212,58 @@ bb-click="_reload": 列表刷新
 bb-click="_empty": 清空列表
 bb-click="_checkAll": 全选中
 bb-click="_clearChecked": 全不选中  当参数为true时， 忽略diff
+bb-click="_remove(1,5)"; 删除元素
 
 // BaseDetail
 bb-click="_reset": 初始化表单
 bb-click="_save": 保存表单(当需要实时保存且不需要提示“保存成功”时使用)
 ```
+
 ### 组件自带指令
 ```js
 bb-checked="checked";      checkbox选中
 bb-show="models.length";   显示、隐藏   models为BaseList中的this.collection.models
 bb-disabled="models.length"
 ```
+
 ### 组件通用方法
 ```js
-this._super(type); // 引用父类，当参数type为view时返回上级视图 model时返回上级模型类，data上级模型类数据,options返回上级参数,"_init" 执行上级方法,为对象时调用父级的_initialize()方法
-this._view('viewId');// 获取视图
-this._region('name', ProductList, {}); // 添加视图区域
+this._super(type); // 引用父类，当参数type为view时返回上级视图 model时返回上级模型类，data上级模型类数据,options返回上级参数,"_init" 执行上级方法,为对象时调用父级的_initialize()方法 (注：BaseItem中调用BaseList中的方法，尽量用this._super('superFn', args))
+this._view('viewId');// 获取视图(注：默认带this.cid)
+this._region('name', ProductList, {}); // 添加视图区域,当一个参数时则为获取视图(注：默认带this.cid)
 this._service('productList').then(function(result){}); // 数据请求服务
 this._navigate('#/home', true); // 导航
-this._dialog({}); // 模块对话框
-this._watch('color', '.render:style', function(fieldName){}); // 数据监听
+
 this._stringifyJSON(['args', 'laymodList']); // 序列化成字符串
 this._parseJSON(['args', 'laymodList']); // 反序列化
+
 this._setOption('itemId', '111'); // 设置组件参数
 this._getOption('itemId');// 获取组件参数
 this._getTpl(); // 获取模板字符串
+
 this._getTarget(e); // 获取鼠标点击时的那个元素
 this._getEventTarget(e); // 获取添加事件的那个元素
-this._getPath(this._get('args.color'), 'args.'); // 获取路径(第二个参数为前缀)
+
 this._one(['ProductList'], function(ProductList){}); // 只执行单次，当第一个参数为数组时，则为require这个模块
 this._require(['ProductList'], function(ProductList){}); // 请求模块
+
 this._delay(function(){}, 5000); // 延迟执行
 this._bind(function(){}); // 绑定上下文
-this._initToolTip(parentNode, className); // 添加提示
+
+this._dialog({}); // 模块对话框
 this._close(); // 关闭对话框
+this._initToolTip(parentNode, className); // 添加提示
+
 this._set('name', 'aaa'); // 设置模型类，可传对象，类似jquery
+this._get('name'); // 获取值
+
+this._watch('color', '.render:style', function(fieldName){}); // 数据监听
+this._getPath(this._get('args.color'), 'args.'); // 获取路径(第二个参数为前缀)
 this._getField('remaining!== models.length'); => 'remaining'// 获取表达式字段
 this._getBoolean('true');   // 获取boolean值，'true' '1' 'str' 均为true, 'false', '0', '' 均为false
+this._getObject('{name: 'aa', value: 'getValue'}'); // 获取对象
 ```
+
 ### 模型类操作
 ```js
 // 重置模型类
@@ -265,8 +290,11 @@ this._setAttr({
 this._setDefault('args.color', '#999'); // 设置默认值 #999
 this._getDefault('args.color', '#999'); // 获取args.color值，若不存在则初始化为#999并返回
 ```
+
 ### BaseItem操作
+```js
 this._getPage(); //获取当前列表第几页
+```
 
 ### 列表操作
 ```js
@@ -306,6 +334,7 @@ this.collection.each(function(model){
   model._get('name'); // 获取值
 });
 ```
+
 ### ui库
 [ui库](http://sj.jihui88.com/mobile/index.html#/ui)
 
@@ -317,10 +346,18 @@ this.collection.each(function(model){
 
 ### 组件指令 (具体使用详见app/scripts/directives/directive.js)
 ```js
+// js
 app.addDirective('disabled', {
   bind: function(value, selector) {
+    // 获取表达式对象
+    var object = this._getObject(value);
+    // 获取boolean
+    var boolean = this._getBoolean(value)
+
+    // 获取字段并添加监视
     this._watch([this._getField(value)], selector + ':disabled');
-    this.$(selector).prop('disabled', this._getBoolean(value));
+    this.$(selector).prop('disabled', boolean);
+
     return {
       compile: Est.compile('{{' + value + '}}')
     }
@@ -332,15 +369,21 @@ app.addDirective('disabled', {
     ...
   }
 });
+// html
+bb-UiRadio="{viewId:'radio-form',cur:getCurValue(formId),items:items, onChange: handleChange}"
 ```
 
 ### 模板指令
 ```html
+// 判断指令
 {{#compare ../page '!==' this}}danaiPageNum{{else}}active{{/compare}}  // 比较
 {{#contains ../element this}}checked="checked"{{/contains}} //是否包含
-{{#xif "this.orderStatus != 'completed' && this.orderStatus != 'invalid'"}}disabled{{/xif}} // 判断
+{{#if isTrue}}true{{/if}} // 简单判断
+{{#If age===28&&name==='jhon2'}}age=28{{else}}age!=28{{/If}} // 复杂判断
 {{#isEmpty image}}<img src='...'/>{{/isEmpty}} // 判断是否为空
 
+// 输出指令
+{{pipe 'Math.floor(age);age+1;plus(age, 1);plus(age, age);'}} // 管道过滤指令, 以分号为间隔
 {{get 'args.color'}} // 取值
 {{dateFormat addTime 'yyyy-MM-dd mm:hh:ss'}} // 日期格式化
 {{replace module.type '\d*$' ''}} // 替换
@@ -359,8 +402,20 @@ app.addDirective('disabled', {
 {{stripScripts '<scripts></scripts>'}} //去除script标签
 
 {{keyMap module.type 'aa'}} // key value 映射
-{{fontSize value}} // 状态映射(具体内容详见app/scripts/status/status.js)
+{{fontSize value}} // 状态映射(更多详见app/scripts/status/status.js)
 ```
+
+### 过滤器 (具体使用详见app/scripts/filter/filter.js)
+```js
+// js
+app.addFilter('myFilter',function(arg1,arg2,arg3){
+  debug(this.name);   // this指向模型类对象
+  return arg1 + arg2 + arg3;
+});
+// html
+{{pipe 'myFilter(name, age, weight)'}}
+```
+
 ### BaseService数据请求服务(具体使用详见/app/scripts/service/Service.js)
 ```js
 new BaseService().factory({
@@ -391,6 +446,7 @@ new BaseService().factory({
     console.dir(result);
 });
 ```
+
 ### 第三方插件
 [对话框(artDialog_v6)](http://aui.github.io/artDialog/doc/index.html) ["dialog-plus"]<br>
 [代码编辑器(codemirror)](http://codemirror.net/) ["CodeMirror"]<br>
@@ -410,6 +466,14 @@ new BaseService().factory({
 兼容所有浏览器(包括IE6789)
 
 ### 更新记录
+>2016.06.01<br>
+bb-click支持括号传参<br>
+bb-keyup="addOne:13" 支持keyCode<br>
+新增组件生命周期filter<br>
+新增复杂判断指令If<br>
+新增管道指令pipe<br>
+新增过滤器addFilter
+
 >2016.05.18<br>
 修复并优化bb-show,bb-model指令
 

@@ -5,7 +5,7 @@
  */
 
 /**
- * 比较
+ * 比较(新版将弃用)
  * @method [判断] - compare
  * @author wyj 2014-03-27
  * @example
@@ -166,7 +166,7 @@ Handlebars.registerHelper('cutByte', function(str, len, options) {
 });
 
 /**
- * 复杂条件
+ * 复杂条件(新版将弃用)
  * @method [判断] - xif
  * @author wyj 14.12.31
  * @example
@@ -190,7 +190,7 @@ Handlebars.registerHelper("x", function(expression, options) {
 });
 
 /**
- * xif条件表达式
+ * xif条件表达式(新版将弃用)
  * @method [判断] - xif
  * @author wyj 15.2.2
  * @example
@@ -199,6 +199,17 @@ Handlebars.registerHelper("x", function(expression, options) {
  */
 Handlebars.registerHelper("xif", function(expression, options) {
   return Handlebars.helpers["x"].apply(this, [expression, options]) ? options.fn(this) : options.inverse(this);
+});
+
+/**
+ * if判断
+ * @method If
+ * @param  {[type]} expression [description]
+ * @param  {[type]} options)   {             return Est.compile(expression, this) ? options.fn(this) : options.inverse(this);} [description]
+ * @return {[type]}            [description]
+ */
+Handlebars.registerHelper('If', function(expression, options) {
+  return Est.compile('{{' + expression.replace(/_quote_/img, "'") + '}}', this) === 'true' ? options.fn(this) : options.inverse(this);
 });
 
 /**
@@ -272,7 +283,7 @@ Handlebars.registerHelper('PIC', function(name, number, options) {
       name = Handlebars.helpers['CONST'].apply(this, [name.replace('CONST.', ''), options]);
     }
   }
-  if (!name || !/[^\s]+\.(?:jpe?g|gif|png|bmp)/i.test(name)) return CONST.DOMAIN + CONST.PIC_NONE + version;
+  if (!name || !/[^\s]+\.(?:jpe?g|gif|png|bmp)/i.test(name)) return CONST.DOMAIN + (options.default || CONST.PIC_NONE) + version;
   if (Est.startsWidth(name, 'http') && name.indexOf('upload') > -1) {
     name = name.substring(name.indexOf('upload'), name.length);
   }
@@ -354,7 +365,9 @@ Handlebars.registerHelper('stripScripts', function(str, options) {
  *    {{replace module.type '\d*$' ''}}
  */
 Handlebars.registerHelper('replace', function(val1, reg, val2, options) {
-  if (Est.isEmpty(val1)){ return val1}
+  if (Est.isEmpty(val1)) {
+    return val1
+  }
   return val1.replace(new RegExp(reg, 'img'), val2);
 });
 
@@ -379,4 +392,89 @@ Handlebars.registerHelper('default', function(val1, val2, options) {
 Handlebars.registerHelper('keyMap', function(val1, val2, options) {
   if (!val1 || !val2) return '';
   return val2[val1];
+});
+
+/**
+ * 管道过滤
+ *
+ * @method [字符串] - pipe
+ * @author wyj 15.5.12
+ * @example
+ *    {{pipe 'Math.floor(age);age+1;plus(age, 1);plus(age, age);'}}
+ */
+Handlebars.registerHelper('pipe', function(expression) {
+  var result,
+    preName = null,
+    preType = 'string',
+    bracketRe = /\(([^:\$]*)\)/img,
+    obj = Est.cloneDeep(this),
+    list = expression.split(';');
+
+  Est.each(list, function(pipe, index) {
+    pipe = Est.trim(pipe);
+    if (Est.isEmpty(pipe)) return;
+    var dollars = [];
+    var key = null;
+    var helper = '';
+    var brackets = pipe.match(bracketRe);
+    if (brackets) {
+      Est.each(brackets[0].split(','), function(item) {
+        var name = Est.trim(item.split('.')[0].replace(/[\(|\)]/img, ''));
+        if (!key) {
+          key = name;
+          if (index === 0) preType = Est.typeOf(Est.getValue(obj, key));
+        }
+        if (name.indexOf('\'') > -1) {
+          dollars.push(name.replace(/'/img, ''));
+        } else if (/^[\d\.]+$/img.test(name)) {
+          dollars.push(parseFloat(name));
+        } else {
+          dollars.push(Est.getValue(obj, name));
+        }
+      }, this);
+    }
+
+    helper = Est.trim(pipe.replace(/\(.*\)/g, ''));
+    if (Handlebars.helpers[helper]) {
+      result = Handlebars.helpers[helper].apply(obj, dollars);
+    } else if (app.getFilter(helper)) {
+      result = app.getFilter(helper).apply(obj, dollars);
+    } else {
+      result = Est.compile('{{' + pipe + '}}', obj);
+      if (result.indexOf('NaN') > -1) {
+        result = result.replace(/NaN/img, '');
+      }
+      if (result.indexOf('undefined') > -1) {
+        result = result.replace(/undefined/img, '');
+      }
+      if (result.indexOf('null') > -1) {
+        result = result.replace(/null/img, '');
+      }
+    }
+
+    if (Est.isEmpty(key)) {
+      key = preName;
+    } else {
+      preName = key;
+    }
+    switch (preType) {
+      case 'string':
+        result = String(result);
+        break;
+      case 'number':
+        if (/^[\d.]*$/.test(result)) {
+          result = Number(result);
+        }
+        break;
+      case 'boolean':
+        result = Boolean(result);
+        break;
+      default:
+        result = String(result);
+    }
+    obj[key] = result;
+
+  }, this);
+
+  return result;
 });

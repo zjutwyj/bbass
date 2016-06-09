@@ -117,14 +117,14 @@
    * @method [模块] - exports
    * @private
    */
-  if (typeof exports !== 'undefined') {
+ /* if (typeof exports !== 'undefined' && exports.cmd) {
     if (typeof module !== 'undefined' && module.exports) {
       exports = module.exports = Est;
     }
     exports.Est = Est;
-  } else {
+  } else {*/
     root.Est = Est;
-  }
+  //}
 
   function identity(value) {
     return value;
@@ -2587,7 +2587,7 @@
    *     Est.setUrlParam('belongId', 'aaa', url);
    *     ==> 'http://www.jihui88.com/index.html?belongId=aaa'
    */
-  function setUrlParam(name, value, url) {
+  function setUrlParam(name, value, url, prefix) {
     var str = "";
     url = url || window.location.href;
     if (indexOf(url, '?') != -1)
@@ -2930,14 +2930,20 @@
    *        Est.off('event1', token); // 取消订阅(若未存token，则全部取消监听)
    */
   function trigger(topic, args) {
-    if (!topics[topic]) return false;
-    setTimeout(function() {
+    var sub = topics[topic];
+    if (!sub) return false;
+    if (sub.timer){
+      clearTimeout(sub.timer);
+    }
+    sub.timer = setTimeout(function() {
       var subscribers = topics[topic],
         len = subscribers ? subscribers.length : 0;
       while (len--) {
         subscribers[len].func(topic, args);
       }
-    }, 0);
+      subscribers.timer = null;
+    }, 10);
+
     return true;
   }
 

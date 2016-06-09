@@ -77,6 +77,7 @@ var BaseCollection = Backbone.Collection.extend({
    */
   _initialize: function() {
     this._baseUrl = this.url;
+    this.__params = this.__params || {};
     if (!this.paginationModel) {
       this.paginationModel = new PaginationModel({
         page: this.options.page || 1,
@@ -135,8 +136,31 @@ var BaseCollection = Backbone.Collection.extend({
     if (typeof this.url !== 'function') {
       var end = '';
       if (!Est.isEmpty(this._itemId)) end = '/' + this._itemId;
-      this.url = this._baseUrl + end + '?page=' + page + '&pageSize=' + pageSize;
+      this.url = this._baseUrl + end + '?page=' + page + '&pageSize=' + pageSize + this._getParams();
     }
+  },
+  /**
+   * 设置请求参数
+   * @method _setParam
+   *
+   * @param {[type]} name  [description]
+   * @param {[type]} value [description]
+   */
+  _setParam: function(name, value) {
+    this.__params[name] = value;
+  },
+  /**
+   * 拼装请求参数
+   * @method _getParams
+   *
+   * @return {[type]} [description]
+   */
+  _getParams: function() {
+    var result = '';
+    Est.each(this.__params, function(val, key) {
+      result += ('&' + key + '=' + val);
+    }, this);
+    return result;
   },
   /**
    * 设置分页模型类

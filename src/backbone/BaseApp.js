@@ -469,7 +469,7 @@ Est.extend(BaseApp.prototype, {
       var sessionId = Est.typeOf(isSession) === 'undefined' ? '' : isSession ? this.data.sessionId : '';
       localStorage['___JHW_BACKBONE__' + Est.hash(sessionId + name)] = value;
     } catch (e) {
-      console.log('Error9 ' + e); //debug__
+      debug('Error9 -> addSession' + e); //debug__
     }
     return value;
   },
@@ -567,7 +567,24 @@ Est.extend(BaseApp.prototype, {
    *
    */
   addFilter: function(name, fn) {
-    this.filters[name].push(fn);
+    if (name === 'navigator') {
+      this.filters[name].push(fn);
+    } else {
+      this.filters[name] = fn;
+    }
+  },
+  /**
+   * 获取过滤器
+   *
+   * @method [过滤] - getFilter
+   * @param name
+   * @return {*}
+   * @author wyj 15.6.22
+   * @example
+   *      App.getFilter('navigator');
+   */
+  getFilter: function(name) {
+    return this.filters[name];
   },
   /**
    * 获取过滤器
@@ -619,7 +636,7 @@ Est.extend(BaseApp.prototype, {
         this.cache[cacheId] = result;
       }
     } catch (e) {
-      debug('Error12' + e); //debug__
+      debug('Error12 -> addCache' + e); //debug__
     }
   },
   /**

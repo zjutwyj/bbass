@@ -98,14 +98,14 @@ var BaseModel = Backbone.Model.extend({
     if (response.msg && !this.hideTip) {
       if (response.success) {
         if (ctx.isNew() && !this.autoHide && !this.hideAddBtn) {
-          buttons.push({
+          /*buttons.push({
             value: CONST.LANG.ADD_CONTINUE,
             callback: function() {
               ctx.set('id', null);
               ctx.set(ctx.baseId, null);
             }
           });
-          _isNew = true;
+          _isNew = true;*/
         }!this.hideOkBtn && buttons.push({
           value: CONST.LANG.CONFIRM,
           callback: function() {

@@ -69,6 +69,7 @@ var BaseView = SuperView.extend({
    */
   _initTemplate: function(template) {
     if (template) {
+      template = this._parseHbs(template);
       this.template = Handlebars.compile(template);
       this.$template = '<div>' + template + '</div>';
     }
@@ -108,11 +109,22 @@ var BaseView = SuperView.extend({
     if (this.beforeRender) this.beforeRender.call(this, this._options);
     if (this._options.append) this.$el.append(this.template(this.model.attributes));
     else this.$el.html(this.template(this.model.attributes));
-    if (this._options.modelBind) this._modelBind();
-    if (this.afterRender) this.afterRender.call(this, this._options);
-    if (this._watchBind) this._watchBind.call(this, this._options.template);
-    if (this._bbBind) this._bbBind.call(this, this._options.template, this.$el);
-    if (this._options.toolTip) this._initToolTip();
+
+    if (this._options.modelBind) setTimeout(this._bind(function(){
+      this._modelBind();
+    }), 0);
+    if (this.afterRender) setTimeout(this._bind(function(){
+      this.afterRender.call(this, this._options);
+    }), 0);
+    if (this._watchBind) setTimeout(this._bind(function(){
+      this._watchBind.call(this, this._options.template);
+    }), 0);
+    if (this._bbBind) setTimeout(this._bind(function(){
+      this._bbBind.call(this, this._options.template, this.$el);
+    }), 0);
+    if (this._options.toolTip) setTimeout(this._bind(function(){
+      this._initToolTip();
+    }), 0);
 
     this._initEnterEvent(this._options);
     this._ready_component_ = true;

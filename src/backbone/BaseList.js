@@ -146,33 +146,34 @@ var BaseList = SuperView.extend({
   _initTemplate: function(options) {
     this._data = options.data = options.data || {};
     if (options.template) {
+      options.template = this._parseHbs(options.template);
       if (this._initDefault) this._initDefault.call(this);
       if (this.beforeRender) this.beforeRender.call(this);
       this.$template = $('<div>' + options.template + '</div>');
-      if (this._options.render) {
+      if (options.render) {
         if (Est.msie()) {
           this.__template = options.template.replace(new RegExp('\\sstyle=', 'img'), ' ng-style=');
-          this._options.itemTemp = $('<div>' + this.__template + '</div>').find(this._options.render).html();
-          if (!Est.isEmpty(this._options.itemTemp)) {
-            this._options.itemTemp = this._options.itemTemp.replace(/ng-style/img, 'style')
+          options.itemTemp = $('<div>' + this.__template + '</div>').find(options.render).html();
+          if (!Est.isEmpty(options.itemTemp)) {
+            options.itemTemp = options.itemTemp.replace(/ng-style/img, 'style')
           }
         } else {
-          this._options.itemTemp = this.$template.find(this._options.render).html();
+          options.itemTemp = this.$template.find(options.render).html();
         }
-        this.$template.find(this._options.render).empty();
+        this.$template.find(options.render).empty();
       } else {
         if (Est.msie()) {
           this.__template = options.template.replace(new RegExp('\\sstyle=', 'img'), ' ng-style=');
-          this._options.itemTemp = $('<div>' + this.__template + '</div>').html();
-          if (!Est.isEmpty(this._options.itemTemp)) {
-            this._options.itemTemp = this._options.itemTemp.replace(/ng-style/img, 'style')
+          options.itemTemp = $('<div>' + this.__template + '</div>').html();
+          if (!Est.isEmpty(options.itemTemp)) {
+            options.itemTemp = options.itemTemp.replace(/ng-style/img, 'style')
           }
         } else {
-          this._options.itemTemp = this.$template.html();
+          options.itemTemp = this.$template.html();
         }
         this.$template.empty();
       }
-      this.template = Handlebars.compile(Est.isEmpty(this._options.itemTemp) ? options.template :
+      this.template = Handlebars.compile(Est.isEmpty(options.itemTemp) ? options.template :
         this.$template.html());
 
       if (this._options.append) {
@@ -182,8 +183,7 @@ var BaseList = SuperView.extend({
         this.$el.html(this.template(this.model.attributes));
       }
     }
-    if (this._options.modelBind) this._modelBind();
-    return this._data;
+    if (options.modelBind) this._modelBind();
   },
   /**
    * 回车事件
@@ -213,8 +213,6 @@ var BaseList = SuperView.extend({
     this.list = options.render ? this.$(options.render) : this.$el;
     if (this.list.size() === 0)
       this.list = $(options.render);
-
-    return this.list;
   },
   /**
    * 初始化collection集合
@@ -229,8 +227,6 @@ var BaseList = SuperView.extend({
     if (options.itemId) this.collection._setItemId(options.itemId);
     //TODO 分类过滤
     if (options.subRender) this.composite = true;
-
-    return this.collection;
   },
   /**
    * 初始化单个枚举视图
@@ -280,7 +276,7 @@ var BaseList = SuperView.extend({
       // 单一观察者模式， 监听reloadList事件
       ctx.collection.paginationModel.on('reloadList',
         function(model) {
-          if (!ctx._options.diff) ctx._setValue('checked_all', false);
+          ctx._set('checked_all', false);
           if (!ctx._options.diff) ctx._clear.call(ctx);
           ctx._load.call(ctx, options, model);
         });
@@ -352,47 +348,93 @@ var BaseList = SuperView.extend({
       }
       // 数据载入
       BaseUtils.addLoading()
-      ctx.collection._load(ctx.collection, ctx, model||this.collection.pagiantionModel).
+      ctx.collection._load(ctx.collection, ctx, model || this.collection.pagiantionModel).
       done(function(result) {
         if (result && result.msg && result.msg === CONST.LANG.AUTH_FAILED) {
           BaseUtils.tip(CONST.LANG.AUTH_LIMIT + '！', {
             time: 2000
           });
         }
-        /*if (ctx.options.instance)
-         app.addData(ctx.options.instance, result.models);*/
-        ctx.list.find('.no-result').remove();
+        ctx._removeNoResult();
         try {
           if (ctx._getTotalPage() === ctx._getPage()) {
             ctx._set('load_completed', true);
           }
           if (Est.isEmpty(result) || Est.isEmpty(result.attributes) || result.attributes.data.length === 0) {
-            ctx._set('result_none', true);
-            ctx._options.append ? ctx.list.append('<div class="no-result">' + CONST.LANG.LOAD_ALL + '</div>') :
-              ctx.list.append('<div class="no-result">' + CONST.LANG.NO_RESULT + '</div>');
-
-            if (ctx._getPage() === 1) Est.trigger('resultListNone' + ctx._options.viewId, {});
+            ctx._handleListNode();
             if (result.msg === CONST.LANG.NOT_LOGIN) {
               Est.trigger('checkLogin');
             }
           }
         } catch (e) {
           Est.trigger('checkLogin');
-          debug('Error4 ' + result.msg); //debug__
+          debug('Error4 -> _load' + result.msg); //debug__
         }
         ctx._afterLoad(options);
         //if (ctx._options.diff) ctx._setModels();
         if (ctx._options.subRender) ctx._filterRoot();
-        if (ctx._options.filter) ctx._filterCollection();
+        //if (ctx._options.filter) ctx._filterCollection();
         if (result.attributes && result.attributes.model) {
           ctx._options.data = Est.extend(ctx._options.data, result.attributes.model);
         }
-        ctx._finally();
+        ctx._filter();
+        ctx._resetModels();
+        if (!ctx._ready_component_) {
+          ctx._finally();
+        }
       });
     } else {
       ctx._afterLoad(options);
-      ctx._finally();
+      ctx._resetModels();
+      if (!ctx._ready_component_) {
+        ctx._finally();
+      }
     }
+  },
+  /**
+   * 初始化完成后执行
+   *
+   * @method [private] - _finally
+   * @private
+   */
+  _finally: function() {
+    if (this.afterRender) setTimeout(this._bind(function() {
+      this.afterRender.call(this, this._options)
+    }), 0);
+    if (this._options.toolTip) setTimeout(this._bind(function() {
+      this._initToolTip();
+    }), 0);
+    this._ready_component_ = true;
+  },
+  _resetModels: function() {
+    this._set('models', this.collection.models);
+    if (this.cms) {
+      Est.off(this.cid + 'models', this.cms);
+    }
+    this.cms = Est.on(this.cid + 'models', this._bind(function() {
+      console.log('reset model models');
+      this._set('models', this.collection.models);
+    }));
+    BaseUtils.removeLoading();
+  },
+  _filter: function() {
+    if (this.filter) {
+      this._appendAble_ = true;
+      this.filter.call(this);
+      this.collection.each(this._addOne, this);
+      this._appendAble_ = false;
+    }
+  },
+  _handleListNode: function() {
+    this._set('result_none', true);
+    this._options.append ? this.list.append('<div class="no-result">' + CONST.LANG.LOAD_ALL + '</div>') :
+      this.list.append('<div class="no-result">' + CONST.LANG.NO_RESULT + '</div>');
+    if (this._getPage() === 1) {
+      this.trigger('resultListNone' + this._options.viewId, {});
+    }
+  },
+  _removeNoResult: function() {
+    this.list.find('.no-result').remove();
   },
   /**
    * 刷新列表 会清空已存在的数据
@@ -408,28 +450,7 @@ var BaseList = SuperView.extend({
     this.list.empty(); // 清空DOM
     this._load(options); // 重新加载数据
   },
-  /**
-   * 初始化完成后执行
-   *
-   * @method [private] - _finally
-   * @private
-   */
-  _finally: function() {
-    this._set('models', this.collection.models);
-    if (this.cms) {
-      Est.off(this.cid + 'models', this.cms);
-    }
-    this.cms = Est.on(this.cid + 'models', this._bind(function() {
-      console.log('reset model models');
-      this._set('models', this.collection.models);
-    }));
 
-    if (this.afterRender) this.afterRender.call(this, this._options);
-    if (this._options.toolTip) this._initToolTip();
-    this._ready_component_ = true;
-
-    BaseUtils.removeLoading();
-  },
   /**
    * 列表载入前执行
    *
@@ -459,23 +480,26 @@ var BaseList = SuperView.extend({
    * @author wyj 15.1.8
    */
   _initItems: function() {
-    if (Est.typeOf(this._options.items) === 'function')
+    if (Est.typeOf(this._options.items) === 'function') {
       this._options.items = this._options.items.apply(this, arguments);
-
-    if (this._options.filter) {
+    }
+    /*if (this._options.filter) {
       this.collection.push(this._options.items);
       this._filterCollection();
       this._options.items = Est.pluck(Est.cloneDeep(this.collection.models, function() {}, this), 'attributes');
-    }
+    }*/
     if (this._options._page || this._options._pageSize) {
       this._renderListByPagination();
-    } else if (!this.filter) {
+    } else {
       Est.each(this._options.items, function(item) {
         if (this._checkStop()) return false;
         this.collection.push(new this.initModel(item));
-        //this.collection._byId[item]
       }, this);
       if (this._options.subRender) this._filterRoot();
+    }
+    this._filter();
+    if (this._options.items.length === 0) {
+      this._handleListNode();
     }
   },
   /**
@@ -653,7 +677,7 @@ var BaseList = SuperView.extend({
    */
   _addOne: function(model, arg1, arg2) {
     var ctx = this;
-    if (!this.filter && !this.composite && this.dx < this._options.max) {
+    if (!this.composite && this.dx < this._options.max) {
       model.set({
         'dx': this.dx++
       });
@@ -693,7 +717,7 @@ var BaseList = SuperView.extend({
         this.collection.models.length > 1) {
         this.collection.models[arg2.at === 0 ? 0 :
           arg2.at - 1].view.$el.after(itemView._render().el);
-      } else {
+      } else if (!this.filter || this._appendAble_) {
         this.list.append(itemView._render().el);
       }
       this.views.push(itemView);
@@ -727,8 +751,10 @@ var BaseList = SuperView.extend({
       }) : model.attributes;
       this._options.items.splice(opts.at - 1, 0, obj);
     }
+    this._appendAble_ = true;
     this.collection.push(model, opts);
-    if (!Est.isEmpty(index)) {
+    this._appendAble_ = false;
+    if (!Est.isEmpty(index) && this._getLength() > 1) {
       this._exchangeOrder(_index - 1, _index, {});
     }
     this._resetDx();
@@ -738,6 +764,7 @@ var BaseList = SuperView.extend({
 
     if (this._get('result_none')) {
       this.list.find('.no-result').remove();
+      this._set('result_none', false);
     }
   },
   /**
@@ -758,9 +785,7 @@ var BaseList = SuperView.extend({
   _resetDx: function() {
     var _dx = 0;
     Est.each(this.collection.models, function(item) {
-      //TODO 新版将移除diff
-      if (item.view.diff) item.view._set('dx', _dx);
-      else item.set('dx', _dx);
+      item.view._set('dx', _dx);
       _dx++;
     });
   },
@@ -785,9 +810,9 @@ var BaseList = SuperView.extend({
    * @private
    * @author wyj 15.1.10
    */
-  _filterCollection: function() {
+  /*_filterCollection: function() {
     this._filter(this._options.filter, this._options);
-  },
+  },*/
   /**
    * 静态分页
    *
@@ -1112,7 +1137,7 @@ var BaseList = SuperView.extend({
               thisNode.stopCollapse = false;
               nextNode.stopCollapse = false;
             } else {
-              debug('Error8'); //debug__
+              debug('Error8 -> _insertOrder'); //debug__
             }
           }
         });
@@ -1158,13 +1183,8 @@ var BaseList = SuperView.extend({
     next.view.model.stopCollapse = true;
     // 交换model
     this.collection.models[new_index] = this.collection.models.splice(original_index, 1, this.collection.models[new_index])[0];
-    if (temp.view.diff) {
-      temp.view.model._set(tempObj);
-      next.view.model._set(nextObj);
-    } else {
-      temp.view.model.set(tempObj);
-      next.view.model.set(nextObj);
-    }
+    temp.view._set(tempObj);
+    next.view._set(nextObj);
 
     // 交换位置
     if (original_index < new_index) {
@@ -1232,7 +1252,7 @@ var BaseList = SuperView.extend({
           thisNode.stopCollapse = false;
           nextNode.stopCollapse = false;
         } else {
-          debug('Error8'); //debug__
+          debug('Error8 -> _moveUp'); //debug__
         }
       }
     });
@@ -1281,7 +1301,7 @@ var BaseList = SuperView.extend({
           thisNode.stopCollapse = false;
           nextNode.stopCollapse = false;
         } else {
-          debug('Error8'); //debug__
+          debug('Error8 -> _moveDown'); //debug__
         }
       }
     });
@@ -1470,7 +1490,7 @@ var BaseList = SuperView.extend({
     this.collection.paginationModel.set('page', page);
   },
   _getTotalPage: function() {
-    return this.collection.paginationModel.get('totalPage');
+    return this._getCount() % this._getPageSize() == 0 ? this._getCount() / this._getPageSize() : Math.floor(this._getCount() / this._getPageSize()) + 1;
   },
   _getCount: function() {
     return this.collection.paginationModel.get('count');
@@ -1483,5 +1503,8 @@ var BaseList = SuperView.extend({
   },
   _setPageSize: function(pageSize) {
     this.collection.paginationModel.set('pageSize', pageSize);
+  },
+  _getLength: function() {
+    return this.collection.models.length;
   }
 });

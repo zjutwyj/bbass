@@ -1,12 +1,3 @@
-###BaseModel
-
-model = BaseModel.extend({
-  defaults: Est.extend(BaseModel.prototype.defaults, {}),
-  fields: ['page', 'type', 'moduleId'],
-  baseUrl: CONST.API + '/common/module/detail',
-  baseId: 'moduleId'
-});
-
 /**
  * radio标签
  *

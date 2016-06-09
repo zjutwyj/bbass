@@ -57,7 +57,7 @@ var BaseDetail = SuperView.extend({
   _initTemplate: function(options) {
     this._data = options.data = options.data || {};
     if (options.template) {
-      this.template = Handlebars.compile(options.template);
+      this.template = Handlebars.compile(this._parseHbs(options.template));
       this.$template = '<div>' + options.template + '</div>';
       //this.$el.append(this.template(options.data));
     }
@@ -89,12 +89,22 @@ var BaseDetail = SuperView.extend({
     if (this._initDefault) this._initDefault.call(this);
     if (this.beforeRender) this.beforeRender.call(this, this._options);
     this.list.append(this.template(this.model.attributes));
-    if (this._options.modelBind) this._modelBind();
+    if (this._options.modelBind) setTimeout(this._bind(function() {
+      this._modelBind();
+    }), 0);
     if (window.topDialog) this.$('.form-actions').hide();
-    if (this._watchBind) this._watchBind.call(this, this._options.template);
-    if (this._bbBind) this._bbBind.call(this, this._options.template, this.$el);
-    if (this.afterRender) this.afterRender.call(this, this._options);
-    if (this._options.toolTip) this._initToolTip();
+    if (this._watchBind) setTimeout(this._bind(function() {
+      this._watchBind.call(this, this._options.template);
+    }), 0);
+    if (this._bbBind) setTimeout(this._bind(function() {
+      this._bbBind.call(this, this._options.template, this.$el);
+    }), 0);
+    if (this.afterRender) setTimeout(this._bind(function() {
+      this.afterRender.call(this, this._options);
+    }), 0);
+    if (this._options.toolTip) setTimeout(this._bind(function() {
+      this._initToolTip();
+    }), 0);
     if (this._options.form) {
       this._formList = this._options.form.split(':');
       this._form(this._formList[0])._initSubmit({
@@ -254,7 +264,7 @@ var BaseDetail = SuperView.extend({
                 }
                 Est.setValue(ctx.model.attributes, modelKey, val);
               } catch (e) {
-                debug('Error18 ' + e); //debug__
+                debug('Error18 -> _initSubmit' + e); //debug__
               }
               //ctx.model.set(modelList[0], modelObj[modelList[0]]);
             } else {
