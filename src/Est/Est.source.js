@@ -793,7 +793,7 @@
         hash = (hash * 33) ^ str.charCodeAt(--i);
       return hash >>> 0;
     } catch (e) {
-      debug('err34' + e);
+      debug('err34 -> ' + e);
     }
   }
 

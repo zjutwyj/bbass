@@ -264,7 +264,7 @@ var BaseDetail = SuperView.extend({
                 }
                 Est.setValue(ctx.model.attributes, modelKey, val);
               } catch (e) {
-                debug('Error18 -> _initSubmit' + e); //debug__
+                debug('Error18 -> _initSubmit -> ' + e); //debug__
               }
               //ctx.model.set(modelList[0], modelObj[modelList[0]]);
             } else {

@@ -469,7 +469,7 @@ Est.extend(BaseApp.prototype, {
       var sessionId = Est.typeOf(isSession) === 'undefined' ? '' : isSession ? this.data.sessionId : '';
       localStorage['___JHW_BACKBONE__' + Est.hash(sessionId + name)] = value;
     } catch (e) {
-      debug('Error9 -> addSession' + e); //debug__
+      debug('Error9 -> addSession -> ' + e); //debug__
     }
     return value;
   },
@@ -636,7 +636,7 @@ Est.extend(BaseApp.prototype, {
         this.cache[cacheId] = result;
       }
     } catch (e) {
-      debug('Error12 -> addCache' + e); //debug__
+      debug('Error12 -> addCache -> ' + e); //debug__
     }
   },
   /**

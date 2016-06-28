@@ -368,9 +368,9 @@ var BaseList = SuperView.extend({
           }
         } catch (e) {
           Est.trigger('checkLogin');
-          debug('Error4 -> _load' + result.msg); //debug__
+          debug('Error4 -> _load -> ' + result.msg); //debug__
         }
-        ctx._afterLoad(options);
+        ctx._afterLoad(options, result);
         //if (ctx._options.diff) ctx._setModels();
         if (ctx._options.subRender) ctx._filterRoot();
         //if (ctx._options.filter) ctx._filterCollection();
@@ -412,7 +412,7 @@ var BaseList = SuperView.extend({
       Est.off(this.cid + 'models', this.cms);
     }
     this.cms = Est.on(this.cid + 'models', this._bind(function() {
-      console.log('reset model models');
+      //debug('reset model models');
       this._set('models', this.collection.models);
     }));
     BaseUtils.removeLoading();
@@ -468,9 +468,9 @@ var BaseList = SuperView.extend({
    * @method [private] - _afterLoad
    * @private
    */
-  _afterLoad: function(options) {
+  _afterLoad: function(options, response) {
     if (this.afterLoad)
-      this.afterLoad.call(this, this.collection);
+      this.afterLoad.call(this, this.collection, response);
   },
   /**
    * 初始化items
@@ -788,6 +788,7 @@ var BaseList = SuperView.extend({
       item.view._set('dx', _dx);
       _dx++;
     });
+    this.dx = this.collection.models.length;
   },
   /**
    * 获取当前模型类在集合类中的索引值

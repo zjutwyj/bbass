@@ -1,27 +1,23 @@
-### 基于Backbone的MVPVM架构
-
-### Bbass特色
-- Restful风格
-- 组件多态(普通视图、列表视图、表单视图)
-- 与jQuery、Zepto良好集成,无须再造轮子，加快产品开发与迭代
-- 兼容IE6789
-- 懒绑定，只有当模型类改变时触发绑定,加快装载速度
-- 易与目前主流视图库vue,react集成,当遇到复杂应用时可随时切换
-- 按需加载
+### 基于Backbone的MVP-VM、Restful风格的架构
 
 ### 组件类型
 ```js
 // 普通视图
 var BaseView = BaseView.extend({
-  template: template
+  template: ``
 });
 
 // 列表视图
 var list = BaseList.extend({
   initialize: fucntion(){
     this._super({
-      model: BaseModel.extend({}),
+      model: BaseModel.extend({
+        fields: ['name'], // 最终要获取的字段
+        baseId: 'id',
+        baseUrl: CONST.API + '/product/detail'
+      }),
       collection: BaseCollection.extend({
+        url: CONST.API + '/product/list',
         model: this.model // 此项必需
       }),
       item: BaseItem.extend({
@@ -37,7 +33,11 @@ var list = BaseList.extend({
 var detail = BaseDetail.extend({
   initialize: fucntion(){
     this._super({
-      model: BaseModel.extend({}),
+      model: BaseModel.extend({
+        fields: ['name'], // 最终要获取的字段
+        baseId: 'id',
+        baseUrl: CONST.API + '/product/detail'
+      }),
       form: '.form#submit'
     });
   }
@@ -466,6 +466,9 @@ new BaseService().factory({
 兼容所有浏览器(包括IE6789)
 
 ### 更新记录
+>2016.06.28<br>
+新增bb-src指令<br>
+
 >2016.06.01<br>
 bb-click支持括号传参<br>
 bb-keyup="addOne:13" 支持keyCode<br>

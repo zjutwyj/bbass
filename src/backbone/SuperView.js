@@ -172,6 +172,7 @@ var SuperView = Backbone.View.extend({
 
   /**
    * 单个模型字段绑定
+   *
    * @method [绑定] - _singeBind
    * @param selector
    * @param model
@@ -249,6 +250,7 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 获取模板
+   *
    * @method _getCompileTemp
    * @param  {string} attrName   属性名称
    * @param  {jquery} node       作用元素
@@ -257,31 +259,36 @@ var SuperView = Backbone.View.extend({
    * @return {Handlebar}         模板
    */
   _getCompileTemp: function(dirName, node, selector, ngDirName, fieldName) {
-    var hbsStr = null;
+    var hbsStr = null,
+      compileStr = '';
+
     switch (dirName) {
       case 'html':
-        return Handlebars.compile(this._parseHbs(node.html()));
+        compileStr = this._parseHbs(node.html());
+        return { compile: Handlebars.compile(compileStr), compileStr: compileStr };
       case 'checked':
-        //Handlebars.compile('checked:{{#if ' + /bb-checked=\"(.*?)\"\s?/img.exec(selector)[1] +
-        // '}}true{{else}}false{{/if}}')
-        return Est.compile('{{' + /bb-checked=\"(.*?)\"\s?/img.exec(selector)[1] + '}}');
+        compileStr = '{{' + /bb-checked=\"(.*?)\"\s?/img.exec(selector)[1] + '}}';
+        return { compile: Est.compile(compileStr), compileStr: compileStr };
       case 'show':
         hbsStr = node.attr('bb-show').split(':');
         if (hbsStr.length > 1) hbsStr = hbsStr[1];
         else hbsStr = hbsStr[0];
-        return Est.compile('{{' + hbsStr + '}}');
+        compileStr = '{{' + hbsStr + '}}';
+        return { compile: Est.compile(compileStr), compileStr: compileStr };
       default:
         if (app.getDirective(dirName)) {
-          return app.getDirective(dirName).compile;
+          return { compile: app.getDirective(dirName).compile, compileStr: selector };
         } else {
-          hbsStr = node.attr(ngDirName);
-          if (!hbsStr && node.is('textarea')) hbsStr = node.html();
-          return Handlebars.compile(Est.isEmpty(hbsStr) ? '{{' + fieldName + '}}' : this._parseHbs(hbsStr));
+          hbsStr = this._parseHbs(node.attr(ngDirName));
+          if (!hbsStr && node.is('textarea')) hbsStr = this._parseHbs(node.html());
+          compileStr = Est.isEmpty(hbsStr) ? '{{' + fieldName + '}}' : hbsStr;
+          return { compile: Handlebars.compile(compileStr), compileStr: compileStr };
         }
     }
   },
   /**
    * 元素替换
+   *
    * @method [替换] - _replaceNode
    * @param  {string} attrName   属性名称
    * @param  {jquery} node       元素
@@ -323,6 +330,7 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 执行替换操作
+   *
    * @method _handleReplace
    * @param  {object} item       缓存的替换对象集
    * @param  {object} model      模型类
@@ -352,6 +360,8 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 获取属性列表
+   * .render:html:style
+   *
    * @method _getAttrList
    * @param  {object} item 缓存的模板对象
    * @return {array}       属性列表
@@ -378,6 +388,8 @@ var SuperView = Backbone.View.extend({
         list.pop();
         list = list.concat(t_list);
       }
+    } else if (item.indexOf('://') > -1) {
+      list = [item];
     } else {
       list = item.split(':');
     }
@@ -387,6 +399,8 @@ var SuperView = Backbone.View.extend({
   /**
    * [bb-watch="signContent.icon:class:html,signContent.iconType:style"]:class:html,
    * signContent.iconType:style,[bb-watch="signContent.icon:src,signContent.iconType:style"]:src
+   *
+   * @method _getSelectorSplit
    * @param  {[type]} selector [description]
    * @return {[type]}          [description]
    */
@@ -465,13 +479,15 @@ var SuperView = Backbone.View.extend({
 
                 this._re_dup[_hash] = [];
                 node = $(_$template).find(list[0]);
+                if (node.size() === 0) {
+                  node = this.$el.find(list[0]);
+                }
 
                 $.each(node, $.proxy(function(index, node) {
-                  this._re_dup[_hash].push({
-                    compile: this._getCompileTemp(attrName, $(node), list[0], ngAttrName, name),
+                  this._re_dup[_hash].push(Est.extend(this._getCompileTemp(attrName, $(node), list[0], ngAttrName, name), {
                     hash: _hash + '' + index,
                     index: index
-                  });
+                  }));
                 }, this));
               }
               Est.each(this._re_dup[_hash], function(item) {
@@ -507,11 +523,12 @@ var SuperView = Backbone.View.extend({
       }
 
     } catch (e) {
-      debug('Error -> _viewReplace' + e + 'selector:' + selector);
+      debug('Error -> _viewReplace -> ' + e + 'selector:' + selector);
     }
   },
   /**
    * 双向绑定
+   *
    * @method [绑定] - _watch
    * @param name
    * @param selector
@@ -542,7 +559,10 @@ var SuperView = Backbone.View.extend({
 
     Est.each(list, function(item) {
       var modelId = item.replace(/^#?model\d?-(.+)$/g, "$1");
-
+      /* debugger
+       if (typeof this._get(modelId) === 'undefined'){
+         this._setDefault(modelId, '');
+       }*/
       if (callback) {
         this.cbMap[modelId] = this.cbMap[modelId] || [];
 
@@ -586,6 +606,7 @@ var SuperView = Backbone.View.extend({
             _self._viewReplace(selector, _self.model, _self.cbMap[modelId], modelId);
             if (_self.update) _self.update.call(_self, modelId);
           });
+
     }, this);
   },
   /**
@@ -727,7 +748,10 @@ var SuperView = Backbone.View.extend({
             var sep = item.value.split(':');
             var field = this._getField(item.value);
             this._watch([sep.length > 1 ? sep[0] : field], '[bb-show="' + item.value + '"]:show');
-            Est.trigger(this.cid + field);
+            if (!this._getBoolean(Est.compile('{{' + item.value + '}}', this.model.attributes))) {
+              this.$('[bb-show="' + item.value + '"]').hide();
+            }
+            //Est.trigger(this.cid + field);
             break;
           case 'model':
             this._modelBind(parent, '[bb-model="' + item.value + '"]');
@@ -749,6 +773,7 @@ var SuperView = Backbone.View.extend({
         }
       }));
     }
+    this._afterTransition();
   },
   /**
    * 处理事件与参数
@@ -904,6 +929,7 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 获取模板字符串
+   *
    * @method _getTpl
    * @return {[type]} [description]
    */
@@ -924,6 +950,7 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 获取模型类的值
+   *
    * @method [模型] - _get
    * @param  {string} path [description]
    * @return {*}      [description]
@@ -985,6 +1012,8 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 获取对象路径
+   *
+   * @method _getPath
    * @return {[type]} [description]
    */
   _getPath: function(data, pre) {
@@ -1023,13 +1052,31 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 获取监听字段
+   * 1. {{pipe 'args.logo.length'}}
+   * 2. bb-show="models.length > 0"
+   * 3. {{PIC pic_path 120}}
+   * 4. {{profileImageUrl}}
    *
    * @method _getField
    * @param  {string} value [description]
    * @return {string}       [description]
    */
   _getField: function(value) {
-    return this._loopField(value.replace(/^[!|(]*(\w+(?:\.\w+)*)(?:[\s|\.|>|<|!|:=])?.*$/img, '$1'));
+    var str = "",
+      list = [],
+      result = null;
+
+    str = value.replace(/^[!|(]*(\w+(?:\.\w+)*)(?:[\s|\.|>|<|!|:=])?.*$/img, '$1');
+    list = str.replace(/({{|}})/img, '').split(/\s/);
+
+    Est.each(list, this._bind(function(item) {
+      result = this._loopField(item);
+      if (result !== null) {
+        return false;
+      }
+    }));
+
+    return result ? result : list[0];
   },
   /**
    * 递归获取模型类可用字段
@@ -1044,7 +1091,7 @@ var SuperView = Backbone.View.extend({
     if (Est.typeOf(this._get(value)) === 'undefined') {
       list = value.split('.');
       if (list.length === 1) {
-        return value;
+        return null;
       }
       list.pop();
       return this._loopField(list.join('.'));
@@ -1054,6 +1101,8 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 获取boolean值，  比如字符串 'true' '1' 'str' 均为true, 'false', '0', '' 均为false
+   *
+   * @method _getBoolean
    * @param  {[type]} value [description]
    * @return {[type]}       [description]
    */
@@ -1070,6 +1119,16 @@ var SuperView = Backbone.View.extend({
       bool = this._get(value);
     }
     return bool;
+  },
+  /**
+   * 判断字符串是不是boolean类型
+   *
+   * @method _isBoolean
+   * @param  {[type]}  str [description]
+   * @return {Boolean}     [description]
+   */
+  _isBoolean: function(str) {
+    return (str === 'true' || str === 'false');
   },
   /**
    * 获取对象，如："{name: 'aaa'}" => '{"name": "aaa"}' => {name: "aaa"}
@@ -1100,10 +1159,10 @@ var SuperView = Backbone.View.extend({
     return JSON.parse(result);*/
 
     var result = '';
-    var object = {};
-    var items = str.replace(/[{}]/img, '').split(',');
+    var object = { fields: {} };
+    var items_o = str.replace(/[{}]/img, '').split(',');
 
-    Est.each(items, function(item) {
+    Est.each(items_o, function(item) {
       var list = item.split(':');
       var r = '';
       var fnInfo = {};
@@ -1113,14 +1172,17 @@ var SuperView = Backbone.View.extend({
         object[list[0]] = Est.trim(list[1].replace(/'/img, ''));
       } else if (list[1] in this.model.attributes) {
         object[list[0]] = this._get(list[1]);
+        object.fields[list[0]] = list[1];
       } else if (this[list[1].replace(/(\(.*\))/img, '')]) {
-        if (list[1].indexOf('(') > -1){
+        if (list[1].indexOf('(') > -1) {
           fnInfo = this._getFunction(list[1], this.model.attributes);
           object[list[0]] = this[fnInfo.key].apply(this, fnInfo.args);
-        } else{
+        } else {
           object[list[0]] = this[list[1]];
         }
 
+      } else if (this._isBoolean(list[1])) {
+        object[list[0]] = this._getBoolean(list[1]);
       } else {
         object[list[0]] = Est.trim(Est.compile(list[1], this.model.attributes));
       }
@@ -1140,7 +1202,7 @@ var SuperView = Backbone.View.extend({
     var bracketRe = /\(([^:\$]*)\)/img,
       key = null,
       helper = Est.trim(str.replace(/\(.*\)/g, ''));
-      args = [];
+    args = [];
 
     var brackets = str.match(bracketRe);
     if (brackets) {
@@ -1189,6 +1251,7 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 赋值模型类
+   *
    * @method [模型] - _set
    * @param {string/object} path [description]
    * @param {string/object} val  [description]
@@ -1218,6 +1281,7 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 批量赋值
+   *
    * @method [模型] - _baseSetValues
    * @param  {object} keyVals [description]
    * @return {*}         [description]
@@ -1229,6 +1293,7 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 基础设置模型类属性值
+   *
    * @method [模型] - _baseSetAttr
    * @param  {[type]} path [description]
    * @param  {[type]} val  [description]
@@ -1282,6 +1347,7 @@ var SuperView = Backbone.View.extend({
 
   /**
    * 获取点击事件源对象
+   *
    * @method [事件] - _getTarget
    * @param e
    * @return {*|jQuery|HTMLElement}
@@ -1293,6 +1359,7 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 获取绑定事件源对象
+   *
    * @method [事件] - _getEventTarget
    * @param e
    * @return {*|jQuery|HTMLElement}
@@ -1303,7 +1370,26 @@ var SuperView = Backbone.View.extend({
     return e.currentTarget ? $(e.currentTarget) : $(e.target);
   },
   /**
+   * 动画执行前
+   *
+   * @method _beforeTransition
+   * @return {[type]} [description]
+   */
+  _beforeTransition: function() {
+    this.$el.css({ 'visibility': 'hidden' });
+  },
+  /**
+   * 动画执行后
+
+   * @method _afterTransition
+   * @return {[type]} [description]
+   */
+  _afterTransition: function() {
+    this.$el.css({ 'visibility': 'visible' });
+  },
+  /**
    * 单次执行
+   *
    * @method [事件] - _one
    * @param callback
    * @author wyj 15.6.14
@@ -1339,11 +1425,12 @@ var SuperView = Backbone.View.extend({
         }
       }
     } catch (e) {
-      debug('SuperView._one ' + JSON.stringify(name) + e, { type: 'error' }); //debug__
+      debug('Error -> SuperView._one ->' + JSON.stringify(name) + e, { type: 'error' }); //debug__
     }
   },
   /**
    * 异步加载
+   *
    * @method [加载] - _require
    * @param dependent
    * @param callback
@@ -1358,8 +1445,8 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 延迟执行
-   * @method [加载] - _delay
    *
+   * @method [加载] - _delay
    * @param time
    * @author wyj 15.12.3
    * @example
@@ -1374,6 +1461,7 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 代理
+   *
    * @method [事件] - _bind
    * @param  {Function} fn [description]
    * @return {[type]}      [description]
@@ -1383,12 +1471,18 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * handlebar if 增强
-   * @method _parseHbs
    *
+   * @method _parseHbs
    * @param  {[type]} template [description]
    * @return {[type]}          [description]
    */
   _parseHbs: function(template) {
+    if (Est.isEmpty(template)) {
+      return null;
+    }
+    if (template.indexOf('_quote_') > -1) {
+      return template;
+    }
     return template.replace(/{{#If\s+(.*?)}}/mg, function(expression) {
       return "{{#If '" + expression.replace(/{{#If\s+(.*)}}/mg, '$1').replace(/'/mg, '_quote_') + "'}}";
     });
@@ -1396,6 +1490,7 @@ var SuperView = Backbone.View.extend({
   _empty: function() {},
   /**
    * 销毁系统绑定的事件及其它
+   *
    * @method [销毁] - _destroy
    * @return {[type]} [description]
    */
@@ -1409,6 +1504,7 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 关闭对话框
+   *
    * @method _close
    */
   _close: function() {
@@ -1530,6 +1626,7 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * title提示
+   *
    * @method [提示] - _initToolTip ( title提示 )
    * @author wyj 15.9.5
    * @example

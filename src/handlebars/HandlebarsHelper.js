@@ -276,6 +276,14 @@ Handlebars.registerHelper('_picUrl', function(src, number, opts) {
  */
 Handlebars.registerHelper('PIC', function(name, number, options) {
   var version = '';
+  var options = options;
+  var def = CONST.PIC_NONE;
+  if (arguments.length < 3) {
+    options = number;
+  }
+  if (options && options.hash.default) {
+    def = options.hash.default;
+  }
   if (name) {
     version += (name.indexOf('?') > -1 ? ('&v=' + Est.hash(CONST.APP_VERSION)) :
       '?v=' + Est.hash(CONST.APP_VERSION));
@@ -283,7 +291,7 @@ Handlebars.registerHelper('PIC', function(name, number, options) {
       name = Handlebars.helpers['CONST'].apply(this, [name.replace('CONST.', ''), options]);
     }
   }
-  if (!name || !/[^\s]+\.(?:jpe?g|gif|png|bmp)/i.test(name)) return CONST.DOMAIN + (options.default || CONST.PIC_NONE) + version;
+  if (!name || !/[^\s]+\.(?:jpe?g|gif|png|bmp)/i.test(name)) return CONST.DOMAIN + def + version;
   if (Est.startsWidth(name, 'http') && name.indexOf('upload') > -1) {
     name = name.substring(name.indexOf('upload'), name.length);
   }

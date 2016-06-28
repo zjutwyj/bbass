@@ -160,6 +160,7 @@ var BaseItem = SuperView.extend({
     if (this._options && this._options.filter)
       this._options.filter.call(this, this.model);
     // 添加判断是否存在this.$el
+    this._beforeTransition();
     this.$el.html(this.hbstemplate ? this.hbstemplate(this.model.attributes) :
       this.viewId && app.getCompileTemp(this.viewId) && app.getCompileTemp(this.viewId)(this.model.attributes));
     this._onAfterRender();
