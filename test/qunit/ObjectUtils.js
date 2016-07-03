@@ -5,6 +5,24 @@
  */
 QUnit.module("【ObjectUtils】");
 
+QUnit.test('compile', function(assert){
+  var value = "{handle: @.todo@, draggable: @.todo@, name: @{{name}}@}";
+  var compile = Est.compile(value);
+  var result = compile({name: 'aaa'});
+
+  assert.equal(result, '{handle: @.todo@, draggable: @.todo@, name: @aaa@}', 'passed');
+  result = result.replace(/@/img, '"');
+  var items = result.substring(1, result.length -1).split(',');
+  var result1 = "{";
+  Est.each(items, function(item, dx){
+    var list = item.split(':');
+    result1 += ((dx===0 ? '': ',') + '"' + Est.trim(list[0]) + '":' + list[1]);
+  });
+  result = result1 + '}';
+ // result = result.replace(//img, '$1');
+
+console.log(JSON.parse(result));
+});
 
 QUnit.test('equal -> 1ms*8', function(assert) {
   var obj1 = { name: 'aaa', age: 33 };
