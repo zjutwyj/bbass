@@ -201,7 +201,7 @@ BaseService.prototype = {
           ctx.initDefault(options, result);
           list = result.attributes ? result.attributes.data : result;
           if (options.session && result.attributes) {
-            app.addSession(cacheId, JSON.stringify(list));
+            app.addSession(cacheId, list);
           }
           topResolve(list);
         });
@@ -256,7 +256,7 @@ BaseService.prototype = {
             Est.trigger('checkLogin');
           }
           if (options.session && result) {
-            app.addSession(cacheId, JSON.stringify(result));
+            app.addSession(cacheId, result);
           }
           topResolve(result);
         });

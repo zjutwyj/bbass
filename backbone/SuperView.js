@@ -762,14 +762,15 @@ var SuperView = Backbone.View.extend({
             this.$('[bb-model="' + item.value + '"]').val(this._get(item.value.split(':')[0]));
             break;
           case 'checked':
-            this._watch([item.value], '[bb-checked="' + item.value + '"]:checked');
-            this.$('[bb-checked="' + item.value + '"]').prop('checked', this._get(item.value));
+            var field = this._getField(item.value);
+            this._watch([field], '[bb-checked="' + item.value + '"]:checked');
+            this.$('[bb-checked="' + item.value + '"]').prop('checked', this._getBoolean(item.value));
             break;
           default:
             if (app.getDirective(item.name)) {
               Est.extend(app.getDirective(item.name), app.getDirective(item.name).bind.call(this,
                 item.value, '[bb-' + item.name + '="' + item.value + '"]'));
-              this._directives_.push(item.name);
+              this._directives_.push({name: item.name, object: app.getDirective(item.name)});
             } else {
               this._handleEvents(parent, item.name, item.value);
             }
@@ -1112,13 +1113,13 @@ var SuperView = Backbone.View.extend({
   _getBoolean: function(value) {
     var bool = Est.compile('{{' + value + '}}', this.model.attributes);
 
-    if (value === 'true' || value === '1') {
+    if (bool === 'true' || bool === '1') {
       bool = true;
-    } else if (value === 'false' || value === '0' || value === '') {
+    } else if (bool === 'false' || bool === '0' || bool === '') {
       bool = false;
-    } else if (Est.typeOf(value) === 'string' && Est.isEmpty(this._get(value))) {
+    } else if (Est.typeOf(bool) === 'string' && Est.isEmpty(this._get(bool))) {
       bool = true;
-    } else if (Est.typeOf(this._get(value)) === 'boolean') {
+    } else if (Est.typeOf(this._get(bool)) === 'boolean') {
       bool = this._get(value);
     }
     return bool;
@@ -1168,7 +1169,7 @@ var SuperView = Backbone.View.extend({
       } else if (this._isBoolean(list[1])) {
         object[list[0]] = this._getBoolean(list[1]);
       } else {
-        object[list[0]] = Est.trim(Est.compile(list[1], this.model.attributes));
+        object[list[0]] = Est.trim(Est.compile('{{' + list[1] + '}}', this.model.attributes));
       }
     }, this);
 
@@ -1480,9 +1481,9 @@ var SuperView = Backbone.View.extend({
    */
   _destroy: function() {
     this._re_dup = null;
-    Est.each(this._directives_, this._bind(function(name) {
-      if (app.getDirective(name) && app.getDirective(name).unbind) {
-        app.getDirective(name).unbind.call(this);
+    Est.each(this._directives_, this._bind(function(item) {
+      if (app.getDirective(item.name) && app.getDirective(item.name).unbind) {
+        app.getDirective(item.name).unbind.call(this, item.object);
       }
     }));
   },

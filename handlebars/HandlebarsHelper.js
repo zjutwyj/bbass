@@ -262,8 +262,12 @@ Handlebars.registerHelper('picUrl', function(src, number, opts) {
 
   return url ? url : '';
 });
-Handlebars.registerHelper('_picUrl', function(src, number, opts) {
-  return CONST.PIC_URL + '/' + Handlebars.helpers['picUrl'].apply(this, [src, number, opts]);
+Handlebars.registerHelper('_picUrl', function(src, number, options) {
+  var domain = CONST.PIC_URL;
+  if (options && options.hash.domain){
+    domain = options.hash.domain;
+  }
+  return domain + '/' + Handlebars.helpers['picUrl'].apply(this, [src, number, options]);
 });
 
 /**
@@ -278,11 +282,15 @@ Handlebars.registerHelper('PIC', function(name, number, options) {
   var version = '';
   var options = options;
   var def = CONST.PIC_NONE;
+  var domain = CONST.PIC_URL;
   if (arguments.length < 3) {
     options = number;
   }
   if (options && options.hash.default) {
     def = options.hash.default;
+  }
+  if (options && options.hash.domain){
+    domain = options.hash.domain;
   }
   if (name) {
     version += (name.indexOf('?') > -1 ? ('&v=' + Est.hash(CONST.APP_VERSION)) :
@@ -296,7 +304,7 @@ Handlebars.registerHelper('PIC', function(name, number, options) {
     name = name.substring(name.indexOf('upload'), name.length);
   }
   if (Est.startsWidth(name, 'upload')) {
-    return arguments.length < 3 ? CONST.PIC_URL + '/' + name + version :
+    return arguments.length < 3 ? domain + '/' + name + version :
       Handlebars.helpers['_picUrl'].apply(this, [name, number, options]) + version;
   }
 

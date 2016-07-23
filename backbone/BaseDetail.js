@@ -102,6 +102,9 @@ var BaseDetail = SuperView.extend({
     if (this.afterRender) setTimeout(this._bind(function() {
       this.afterRender.call(this, this._options);
     }), 0);
+    if (this._options.onReady) setTimeout(this._bind(function() {
+      this._options.onReady.call(this, this._options);
+    }), 0);
     if (this._options.toolTip) setTimeout(this._bind(function() {
       this._initToolTip();
     }), 0);

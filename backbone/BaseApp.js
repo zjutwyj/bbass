@@ -467,7 +467,7 @@ Est.extend(BaseApp.prototype, {
   addSession: function(name, value, isSession) {
     try {
       var sessionId = Est.typeOf(isSession) === 'undefined' ? '' : isSession ? this.data.sessionId : '';
-      localStorage['___JHW_BACKBONE__' + Est.hash(sessionId + name)] = value;
+      localStorage['___JHW_BACKBONE__' + Est.hash(sessionId + name)] = JSON.stringify(value);
     } catch (e) {
       debug('Error9 -> addSession -> ' + e); //debug__
     }
@@ -483,8 +483,14 @@ Est.extend(BaseApp.prototype, {
    *      App.getSession('__USER__'); => {username: 'ggggfj'}
    */
   getSession: function(name, isSession) {
-    var sessionId = Est.typeOf(isSession) === 'undefined' ? '' : isSession ? this.data.sessionId : '';
-    return localStorage['___JHW_BACKBONE__' + Est.hash(sessionId + name)];
+    try{
+      var sessionId = Est.typeOf(isSession) === 'undefined' ? '' : isSession ? this.data.sessionId : '';
+      return JSON.parse(localStorage['___JHW_BACKBONE__' + Est.hash(sessionId + name)]);
+    }catch(e){
+      app.addSession(name, '');
+      return '';
+    }
+
   },
   /**
    * 添加编译模板
@@ -631,7 +637,7 @@ Est.extend(BaseApp.prototype, {
       cacheId = this.getParamsHash(options);
 
       if (options.session && result) {
-        app.addSession(cacheId, JSON.stringify(result));
+        app.addSession(cacheId, result);
       } else {
         this.cache[cacheId] = result;
       }

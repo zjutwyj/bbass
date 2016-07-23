@@ -63,6 +63,7 @@ var Module = BaseView.extend({
       setValue: function(val){}, // 手动为组件赋值，内可加逻辑代码
       onChange: fucntion(){}, // 手动调用，内可加逻辑代码
       onUpdate: function(){}, // 当模型类改变时系统会实时调用这个回调
+      onReady: fucntion(){},  // 组件渲染完毕
 
       // BaseList 部分
       model: ProductModel, // 模型类,
@@ -356,7 +357,8 @@ app.addDirective('disabled', {
   update: function(name, node, selector, result) {
     node.prop('disabled', this._getBoolean(result));
   },
-  unbind: function(){
+  unbind: function(object){
+    // object里的参数为bind方法里返回的数据
     ...
   }
 });
@@ -441,6 +443,9 @@ new BaseService().factory({
 兼容所有浏览器(包括IE6789)
 
 ### 更新记录
+>2016.07.19<br>
+新增onReady约定<br>
+
 >2016.06.28<br>
 新增bb-src指令<br>
 

@@ -110,19 +110,22 @@ var BaseView = SuperView.extend({
     if (this._options.append) this.$el.append(this.template(this.model.attributes));
     else this.$el.html(this.template(this.model.attributes));
 
-    if (this._options.modelBind) setTimeout(this._bind(function(){
+    if (this._options.modelBind) setTimeout(this._bind(function() {
       this._modelBind();
     }), 0);
-    if (this.afterRender) setTimeout(this._bind(function(){
+    if (this.afterRender) setTimeout(this._bind(function() {
       this.afterRender.call(this, this._options);
     }), 0);
-    if (this._watchBind) setTimeout(this._bind(function(){
+    if (this._options.onReady) setTimeout(this._bind(function() {
+      this._options.onReady.call(this, this._options);
+    }), 0);
+    if (this._watchBind) setTimeout(this._bind(function() {
       this._watchBind.call(this, this._options.template);
     }), 0);
-    if (this._bbBind) setTimeout(this._bind(function(){
+    if (this._bbBind) setTimeout(this._bind(function() {
       this._bbBind.call(this, this._options.template, this.$el);
     }), 0);
-    if (this._options.toolTip) setTimeout(this._bind(function(){
+    if (this._options.toolTip) setTimeout(this._bind(function() {
       this._initToolTip();
     }), 0);
 
