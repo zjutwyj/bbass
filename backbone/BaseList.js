@@ -222,6 +222,7 @@ var BaseList = SuperView.extend({
    * @private
    */
   _initCollection: function(options, collection) {
+    if (!collection.prototype.hasOwnProperty('model')){collection.prototype.model = this._options.model};
     if (!this.collection || (this.collection && !this.collection.remove))
       this.collection = new collection(options);
     if (options.itemId) this.collection._setItemId(options.itemId);

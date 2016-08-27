@@ -499,13 +499,7 @@ var BaseItem = SuperView.extend({
     if (this.model.attributes._response) delete this.model.attributes._response;
     if (this.beforeSave) this.beforeSave.call(this);
     this.model.save({}, {
-      wait: true,
-      success: function(model, response) {
-        BaseUtils.tip(CONST.LANG.SAVE_SUCCESS);
-      },
-      error: function(model, error) {
-        BaseUtils.tip(CONST.LANG.SAVE_ERROR);
-      }
+      wait: true
     });
     if (this.afterSave) this.afterSave.call(this);
   },
@@ -567,8 +561,11 @@ var BaseItem = SuperView.extend({
               button: buttons
             });
           },
-          success: function() {
+          success: function(model, response, xhr) {
             context._removeFromItems(context.model.get('dx'));
+            if (context.model.deleteTip){
+              BaseUtils.tip(response.msg);
+            }
             if (callback) callback.call(context);
           }
         });

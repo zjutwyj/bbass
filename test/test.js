@@ -1,1 +1,7 @@
-DetachableCriteria(CriteriaImpl(com.abbcc.models.AbcMessage:this[][recvUser<>User_000000000000000000000050282, recvUser is not null, type<>04, addTime between Mon Jul 18 00:00:00 CST 2016 and Tue Jul 19 00:00:00 CST 2016]))
+var model = {
+  "result_code": "SUCCESS",
+  "enterprise_id": "Enterp_0000000000000000000049341",
+  "name": "jihui",
+  "title": "\u5206\u9500\u4e2d\u5fc3",
+  "link": "http:\/\/www.jihui88.com\/wechat\/cps\/index.php\/dealer\/index\/10"
+}

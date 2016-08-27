@@ -54,7 +54,8 @@ var BaseCollection = Backbone.Collection.extend({
           if (app.getView(this.options.viewId)) {
             return app.getView(this.options.viewId).model;
           } else {
-            return null;
+            var model = this.model;
+            return new model(this.options.data);
           }
           break;
         case 'view':
@@ -104,7 +105,11 @@ var BaseCollection = Backbone.Collection.extend({
       return [];
     }
     if (!resp.success && resp.msg) {
-      BaseUtils.tip(resp.msg, { zIndex: 5000 });
+      if (resp.msg === CONST.LANG.NOT_LOGIN && !Est.isEmpty(this.url)) {
+        Est.trigger('checkLogin');
+      } else{
+        BaseUtils.tip(resp.msg, { zIndex: 5000 });
+      }
     }
     this._parsePagination(resp);
     this._parseUrl(this.paginationModel);

@@ -278,7 +278,7 @@ var SuperView = Backbone.View.extend({
       default:
         if (app.getDirective(dirName)) {
           compileStr = node.attr('bb-' + ngDirName);
-          return { compile: app.getDirective(dirName).compile ? app.getDirective(dirName).compile : compileStr.indexOf('{{') > -1 ? Handlebars.compile(compileStr): Est.compile('{{' + compileStr + '}}'), compileStr: selector };
+          return { compile: app.getDirective(dirName).compile ? app.getDirective(dirName).compile : compileStr.indexOf('{{') > -1 ? Handlebars.compile(compileStr) : Est.compile('{{' + compileStr + '}}'), compileStr: selector };
         } else {
           hbsStr = this._parseHbs(node.attr(ngDirName));
           if (!hbsStr && node.is('textarea')) hbsStr = this._parseHbs(node.html());
@@ -770,7 +770,7 @@ var SuperView = Backbone.View.extend({
             if (app.getDirective(item.name)) {
               Est.extend(app.getDirective(item.name), app.getDirective(item.name).bind.call(this,
                 item.value, '[bb-' + item.name + '="' + item.value + '"]'));
-              this._directives_.push({name: item.name, object: app.getDirective(item.name)});
+              this._directives_.push({ name: item.name, object: app.getDirective(item.name) });
             } else {
               this._handleEvents(parent, item.name, item.value);
             }
@@ -1136,6 +1136,7 @@ var SuperView = Backbone.View.extend({
   },
   /**
    * 获取对象，如："{name: 'aaa'}" => '{"name": "aaa"}' => {name: "aaa"}
+   * "{moduleId:'AdminLangconfigList',title:'配置中文语言设置',data: {moduleId:id,lanId:1,key:'value'},cover:true,width:800,height:600}"
    *
    * @method _getObject
    * @param  {string} value 字符串
@@ -1145,15 +1146,34 @@ var SuperView = Backbone.View.extend({
 
     var result = '',
       object = { fields: {} },
-      items_o = str.replace(/[{}]/img, '').split(',');
+      list = [],
+      temp = '',
+      items_o = Est.trim(str).substring(1, str.length - 1).split(',');
 
     Est.each(items_o, function(item) {
+      if (Est.typeOf(item) === 'string' && item.indexOf('{') > -1) {
+        temp += (item+',');
+      } else if (Est.typeOf(item) === 'string' && item.indexOf('}') > -1) {
+        temp += item;
+        list.push(temp);
+        temp = '';
+      } else if (temp.length > 0) {
+        temp += (item + ',');
+      } else {
+        list.push(item);
+      }
+    });
+
+    Est.each(list, function(item) {
       var list = item.split(':');
       var r = '';
       var fnInfo = {};
       list[0] = Est.trim(list[0]);
       list[1] = Est.trim(list[1]);
-      if (list[1].indexOf('\'') > -1) {
+      if (Est.typeOf(list[1]) === 'string' && list[1].indexOf('{') > -1) {
+        var key = list.shift();
+        object[key] = this._getObject(list.join(':'));
+      } else if (list[1].indexOf('\'') > -1) {
         object[list[0]] = Est.trim(list[1].replace(/'/img, ''));
       } else if (list[1] in this.model.attributes) {
         object[list[0]] = this._get(list[1]);
@@ -1255,7 +1275,7 @@ var SuperView = Backbone.View.extend({
       }
       if (this.change && !this.change.timer) {
         this.change.timer = setTimeout(this._bind(function() {
-          this.change.call(this, this.viewType);
+          this.change.call(this, this.viewType, path);
           this.change.timer = null;
         }), 20);
       };

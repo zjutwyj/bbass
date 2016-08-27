@@ -183,6 +183,10 @@ BaseService.prototype = {
       } else {
         ctx.ajax(options).done(function(result) {
           var list = null;
+
+            if (result && result.msg === CONST.LANG.NOT_LOGIN) {
+              Est.trigger('checkLogin');
+            }
           if (Est.typeOf(result) === 'string') {
             if (options.session && result.attributes) {
               app.addSession(cacheId, result);

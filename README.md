@@ -14,11 +14,14 @@ var list = BaseList.extend({
       model: BaseModel.extend({
         fields: ['name'], // 最终要获取的字段
         baseId: 'id',
-        baseUrl: CONST.API + '/product/detail'
+        baseUrl: CONST.API + '/product/detail',
+        // 保存修改删除提示
+        continueAdd: true,  // 继续添加
+        saveTip: true,     // 保存修改提示
+        deleteTip: true   // 删除提示
       }),
       collection: BaseCollection.extend({
-        url: CONST.API + '/product/list',
-        model: this.model // 此项必需
+        url: CONST.API + '/product/list'
       }),
       item: BaseItem.extend({
         tagName: 'li',

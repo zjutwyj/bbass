@@ -14,7 +14,7 @@
 
 
 var BaseModel = Backbone.Model.extend({
-  defaults: { checked: false, checked_all: false,load_completed: false,result_none: false,children: []},
+  defaults: { checked: false, checked_all: false, load_completed: false, result_none: false, children: [] },
   baseId: '',
   /**
    * 初始化请求连接, 判断是否为新对象， 否自动加上ID
@@ -97,35 +97,18 @@ var BaseModel = Backbone.Model.extend({
     // 关闭当前消息对话框， 当文档中存在btn-back按钮时， 返回列表页面
     if (response.msg && !this.hideTip) {
       if (response.success) {
-        if (ctx.isNew() && !this.autoHide && !this.hideAddBtn) {
-          /*buttons.push({
+        if (ctx.isNew() && this.continueAdd) {
+          buttons.push({
             value: CONST.LANG.ADD_CONTINUE,
             callback: function() {
               ctx.set('id', null);
               ctx.set(ctx.baseId, null);
             }
           });
-          _isNew = true;*/
-        }!this.hideOkBtn && buttons.push({
-          value: CONST.LANG.CONFIRM,
-          callback: function() {
-            Est.trigger('_dialog_submit_callback');
-            this.autoBack = Est.typeOf(this.autoBack) === 'undefined' ? true : this.autoBack;
-            if (typeof window.topDialog != 'undefined') {
-              window.topDialog.close(); // 关键性语句
-              window.topDialog = null;
-              $ && this.autoBack && $(".btn-back").click();
-            } else if (app.getDialogs().length > 0) {
-              try {
-                app.getDialogs().pop().close().remove();
-                $ && this.autoBack && $(".btn-back").click();
-              } catch (e) {}
-            }
-            this.close();
-          },
-          autofocus: true
-        });
-      } else {
+          _isNew = true;
+        }
+      }
+      if (this.saveTip) {
         buttons.push({
           value: CONST.LANG.CONFIRM,
           callback: function() {
@@ -134,18 +117,21 @@ var BaseModel = Backbone.Model.extend({
           autofocus: true
         });
       }
-      this.hideOkBtn && Est.trigger('_dialog_submit_callback');
-      var dialog_msg = BaseUtils.dialog({
-        id: 'dialog_msg',
-        title: CONST.LANG.TIP,
-        content: '<div style="padding: 20px;">' + response.msg + '</div>',
-        width: 250,
-        button: buttons
-      });
-      setTimeout(function() {
-        app.getDialog('dialog_msg') && (ctx.autoHide || !_isNew) &&
-          app.getDialog('dialog_msg').close().remove();
-      }, 2000);
+      if (buttons.length > 0) {
+        var dialog_msg = BaseUtils.dialog({
+          id: 'dialog_msg',
+          title: CONST.LANG.TIP,
+          content: '<div style="padding: 20px;">' + response.msg + '</div>',
+          width: 250,
+          button: buttons
+        });
+        if (!this.continueAdd) {
+          setTimeout(function() {
+            app.getDialog('dialog_msg') && (ctx.autoHide || !_isNew) &&
+              app.getDialog('dialog_msg').close().remove();
+          }, 2000);
+        }
+      }
     }
     // 当success为false时， 直接返回服务器错误的response信息
     if (Est.typeOf(response.success) === 'boolean' && !response.success) {
@@ -303,11 +289,23 @@ var BaseModel = Backbone.Model.extend({
   _setValue: function(path, val) {
     Est.setValue(this.attributes, path, val);
   },
+  /**
+   * 设置模型类值
+   * @method _set
+   * @param {[type]} path [description]
+   * @param {[type]} val  [description]
+   */
   _set: function(path, val) {
-    return this.view._set(path, val);
+    return this.view ? this.view._set(path, val) : this._setValue(path, val);
   },
+  /**
+   * 获取模型类值
+   * @method _get
+   * @param  {[type]} path [description]
+   * @return {[type]}      [description]
+   */
   _get: function(path) {
-    return this.view._get(path);
+    return this.view ? this.view._get(path) : this._getValue(path);
   },
   initialize: function() {
     this._initialize();
