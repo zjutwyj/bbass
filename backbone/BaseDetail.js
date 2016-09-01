@@ -88,7 +88,10 @@ var BaseDetail = SuperView.extend({
   _render: function() {
     if (this._initDefault) this._initDefault.call(this);
     if (this.beforeRender) this.beforeRender.call(this, this._options);
+    if (!this._options.append) this.list.empty();
+
     this.list.append(this.template(this.model.attributes));
+
     if (this._options.modelBind) setTimeout(this._bind(function() {
       this._modelBind();
     }), 0);
@@ -132,6 +135,8 @@ var BaseDetail = SuperView.extend({
    * @author wyj 14.11.15
    */
   _initModel: function(model, ctx) {
+    this._options.id = Est.typeOf(this._options.id) === 'number' ? this._options.id + '' : this._options.id;
+    this._options.data.id = Est.typeOf(this._options.data.id) === 'number' ? this._options.data.id + '' : this._options.data.id;
     ctx.passId = this.options.id || this._options.data.id || Est.getUrlParam('id', window.location.href);
 
     if (!Est.isEmpty(this.passId)) {
@@ -141,7 +146,7 @@ var BaseDetail = SuperView.extend({
       ctx.model.set('CONST', CONST);
       if (ctx.beforeLoad) ctx.beforeLoad.call(this);
       ctx.model.fetch().done(function(response) {
-        if (response.msg === CONST.LANG.NOT_LOGIN) {
+        if (response.msgType === 'notLogin') {
           Est.trigger('checkLogin');
         }
         ctx.model.set('_isAdd', ctx._isAdd = false);
@@ -299,12 +304,12 @@ var BaseDetail = SuperView.extend({
               }
               $button.prop('disabled', false);
             });
-            options.afterSave.call(ctx, response, Est.typeOf(response) === 'string' ? true : Est.typeOf(Est.getValue(response, 'attributes._response.success')) === 'boolean' ?
-              Est.getValue(response, 'attributes._response.success') : true);
+            options.afterSave.call(ctx, response, Est.typeOf(response) === 'string' ? { msg: null, msgType: null, success: true } : Est.typeOf(Est.getValue(response, 'attributes._response.success')) === 'boolean' ?
+              Est.getValue(response, 'attributes._response') : { msg: null, msgType: null, success: true });
           }
           $button.html(preText);
         }, function(response) {
-          if (response.msg === CONST.LANG.NOT_LOGIN) {
+          if (response.msgType === 'notLogin') {
             Est.trigger('checkLogin');
           }
           if (ctx.errorSave) ctx.errorSave.call(ctx, response);
@@ -344,6 +349,11 @@ var BaseDetail = SuperView.extend({
     if (this.model.attributes._response) {
       delete this.model.attributes._response;
     }
+
+    Est.off('errorSave' + this.model.cid).on('errorSave' + this.model.cid, this._bind(function(type, response) {
+      if (this.errorSave) this.errorSave.call(this, response);
+    }));
+
     this.model.save(null, {
       wait: true,
       success: function(response) {

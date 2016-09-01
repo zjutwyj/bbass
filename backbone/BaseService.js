@@ -184,7 +184,7 @@ BaseService.prototype = {
         ctx.ajax(options).done(function(result) {
           var list = null;
 
-            if (result && result.msg === CONST.LANG.NOT_LOGIN) {
+            if (result && result.msgType === 'notLogin') {
               Est.trigger('checkLogin');
             }
           if (Est.typeOf(result) === 'string') {
@@ -256,7 +256,7 @@ BaseService.prototype = {
         topResolve([]);
       } else {
         ctx.ajax(options).done(function(result) {
-          if (result.msg === CONST.LANG.NOT_LOGIN) {
+          if (result.msgType === 'notLogin') {
             Est.trigger('checkLogin');
           }
           if (options.session && result) {

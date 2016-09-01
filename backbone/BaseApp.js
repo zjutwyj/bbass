@@ -5,46 +5,26 @@
  */
 var BaseApp = function(options) {
   this.options = options;
-
   Est.extend(this, options);
   this.initialize.apply(this, arguments);
 };
 Est.extend(BaseApp.prototype, {
   initialize: function() {
-    this.data = {
-      itemActiveList: [],
-      sessionId: ''
-    };
-    // 实例对象
-    this.instance = {};
-    // 所有模块
-    this.modules = {};
-    // 路由
-    this.routes = {};
-    // 静态模板
-    this.templates = {};
-    // 面板
-    this.panels = {};
-    // 对话框
-    this.dialog = [];
-    // 带身份标识的dialog
-    this.dialogs = {};
-    // 状态
-    this.status = {};
-    // 会话
-    this.cookies = [];
-    // 实体对象
-    this.models = [];
-    // 编译模版
-    this.compileTemps = {};
-    // 过滤器
-    this.filters = {
-      navigator: [],
-      form: []
-    };
-    // 缓存
-    this.cache = {};
-    this.directives = {};
+    this.data = { itemActiveList: [], sessionId: '' }; // 全局数据
+    this.instance = {}; // 实例对象
+    this.modules = {}; // 所有模块
+    this.routes = {}; // 路由
+    this.templates = {}; // 静态模板
+    this.panels = {}; // 面板
+    this.dialog = []; // 对话框
+    this.dialogs = {}; // 带身份标识的dialog
+    this.status = {}; // 状态
+    this.cookies = []; // 会话
+    this.models = []; // 实体对象
+    this.compileTemps = {}; // 编译模版
+    this.filters = { navigator: [], form: [] }; // 过滤器
+    this.cache = {}; // 缓存
+    this.directives = {}; // 指令
   },
   /**
    * 返回当前应用底层使用的是backbone版本
@@ -483,10 +463,10 @@ Est.extend(BaseApp.prototype, {
    *      App.getSession('__USER__'); => {username: 'ggggfj'}
    */
   getSession: function(name, isSession) {
-    try{
+    try {
       var sessionId = Est.typeOf(isSession) === 'undefined' ? '' : isSession ? this.data.sessionId : '';
       return JSON.parse(localStorage['___JHW_BACKBONE__' + Est.hash(sessionId + name)]);
-    }catch(e){
+    } catch (e) {
       app.addSession(name, '');
       return '';
     }

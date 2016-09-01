@@ -363,7 +363,7 @@ var BaseList = SuperView.extend({
           }
           if (Est.isEmpty(result) || Est.isEmpty(result.attributes) || result.attributes.data.length === 0) {
             ctx._handleListNode();
-            if (result.msg === CONST.LANG.NOT_LOGIN) {
+            if (result.msgType === 'notLogin') {
               Est.trigger('checkLogin');
             }
           }

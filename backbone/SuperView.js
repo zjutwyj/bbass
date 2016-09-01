@@ -278,7 +278,8 @@ var SuperView = Backbone.View.extend({
       default:
         if (app.getDirective(dirName)) {
           compileStr = node.attr('bb-' + ngDirName);
-          return { compile: app.getDirective(dirName).compile ? app.getDirective(dirName).compile : compileStr.indexOf('{{') > -1 ? Handlebars.compile(compileStr) : Est.compile('{{' + compileStr + '}}'), compileStr: selector };
+          compileStr = compileStr || fieldName;
+          return { compile: app.getDirective(dirName).compile ? app.getDirective(dirName).compile : compileStr.indexOf('{{') > -1 ? Handlebars.compile(compileStr) : Est.compile('{{' + compileStr + '}}'), compileStr: selector};
         } else {
           hbsStr = this._parseHbs(node.attr(ngDirName));
           if (!hbsStr && node.is('textarea')) hbsStr = this._parseHbs(node.html());
@@ -353,6 +354,11 @@ var SuperView = Backbone.View.extend({
     // 缓存node
     if (!item.node) {
       item.node = this.$(selector).eq(item.index);
+      if (item.node.size() === 0){
+        // 针对bb-src
+        item.node = this.$('.directive_' + Est.hash(selector)).eq(item.index);
+        //console.error("error: call wyj for more info");
+      }
     }
     // 赋值
     this._replaceNode(attrName, item.node, _result, selector, ngAttrName);

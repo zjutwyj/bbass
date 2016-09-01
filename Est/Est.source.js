@@ -101,7 +101,7 @@
         } else {
           console.log(msg);
         }
-        if (options && options.e){
+        if (options && options.e) {
           console.log(options.e);
         }
       }
@@ -120,13 +120,13 @@
    * @method [模块] - exports
    * @private
    */
- /* if (typeof exports !== 'undefined' && exports.cmd) {
-    if (typeof module !== 'undefined' && module.exports) {
-      exports = module.exports = Est;
-    }
-    exports.Est = Est;
-  } else {*/
-    root.Est = Est;
+  /* if (typeof exports !== 'undefined' && exports.cmd) {
+     if (typeof module !== 'undefined' && module.exports) {
+       exports = module.exports = Est;
+     }
+     exports.Est = Est;
+   } else {*/
+  root.Est = Est;
   //}
 
   function identity(value) {
@@ -628,7 +628,8 @@
       if (isEmpty(object)) return null;
       each(array, function(key) {
         if (typeOf(object) === 'string') {
-          return false; }
+          return false;
+        }
         if (key in object) {
           if (array.length === 1) {
             // 如果为数组最后一个元素， 则返回值
@@ -789,7 +790,8 @@
 
     try {
       if (!str) {
-        return null; }
+        return null;
+      }
       var hash = 5381,
         i = str.length;
       while (i)
@@ -2591,16 +2593,20 @@
    *     ==> 'http://www.jihui88.com/index.html?belongId=aaa'
    */
   function setUrlParam(name, value, url, prefix) {
-    var str = "";
+    var str = "",
+      returnurl = "",
+      setparam = "",
+      arr,
+      modify = "0";
+
     url = url || window.location.href;
-    if (indexOf(url, '?') != -1)
+
+    if (indexOf(url, '?') != -1) {
       str = url.substr(indexOf(url, '?') + 1);
-    else
+    } else {
       return url + "?" + name + "=" + value;
-    var returnurl = "";
-    var setparam = "";
-    var arr;
-    var modify = "0";
+    }
+
     if (indexOf(str, '&') != -1) {
       arr = str.split('&');
       each(arr, function(item) {
@@ -2935,7 +2941,7 @@
   function trigger(topic, args) {
     var sub = topics[topic];
     if (!sub) return false;
-    if (sub.timer){
+    if (sub.timer) {
       clearTimeout(sub.timer);
     }
     sub.timer = setTimeout(function() {

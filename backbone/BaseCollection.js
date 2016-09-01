@@ -105,7 +105,7 @@ var BaseCollection = Backbone.Collection.extend({
       return [];
     }
     if (!resp.success && resp.msg) {
-      if (resp.msg === CONST.LANG.NOT_LOGIN && !Est.isEmpty(this.url)) {
+      if (resp.msgType === "notLogin" && !Est.isEmpty(this.url)) {
         Est.trigger('checkLogin');
       } else{
         BaseUtils.tip(resp.msg, { zIndex: 5000 });

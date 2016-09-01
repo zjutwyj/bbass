@@ -91,7 +91,7 @@ var BaseItem = SuperView.extend({
     if (options.template) {
       this.$template = '<div>' + options.template + '</div>';
       if (options.viewId) {
-        if (!app.getCompileTemp(options.viewId)){
+        if (!app.getCompileTemp(options.viewId)) {
           app.addCompileTemp(options.viewId, Handlebars.compile(this._parseHbs(options.template)));
         }
       } else {
@@ -498,6 +498,9 @@ var BaseItem = SuperView.extend({
   _save: function() {
     if (this.model.attributes._response) delete this.model.attributes._response;
     if (this.beforeSave) this.beforeSave.call(this);
+    Est.off('errorSave' + this.model.cid).on('errorSave' + this.model.cid, this._bind(function(type, response) {
+      if (this.errorSave) this.errorSave.call(this, response);
+    }));
     this.model.save({}, {
       wait: true
     });
@@ -563,7 +566,7 @@ var BaseItem = SuperView.extend({
           },
           success: function(model, response, xhr) {
             context._removeFromItems(context.model.get('dx'));
-            if (context.model.deleteTip){
+            if (context.model.deleteTip) {
               BaseUtils.tip(response.msg);
             }
             if (callback) callback.call(context);

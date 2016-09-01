@@ -88,7 +88,7 @@ var BaseModel = Backbone.Model.extend({
     if (response && response.msg && response.msg === CONST.LANG.AUTH_FAILED) {
       BaseUtils.tip(CONST.LANG.AUTH_LIMIT, { time: 2000 });
     }
-    if (response.msg === CONST.LANG.NOT_LOGIN && !this.stopCheckLogin) {
+    if (response.msgType === 'notLogin' && !this.stopCheckLogin) {
       Est.trigger('checkLogin');
     }
     // 当服务器有返回msg消息 并参数设置hideTip为false时  弹出提示信息
@@ -136,6 +136,7 @@ var BaseModel = Backbone.Model.extend({
     // 当success为false时， 直接返回服务器错误的response信息
     if (Est.typeOf(response.success) === 'boolean' && !response.success) {
       ctx.attributes._response = response;
+      Est.trigger('errorSave' + ctx.cid, response);
       return ctx.attributes;
     }
     // 处理data数据， 并把data数据赋值到response对象上
@@ -190,7 +191,7 @@ var BaseModel = Backbone.Model.extend({
     if (newModel.baseUrl) {
       newModel.save(null, {
         success: function(model, result) {
-          if (result.msg === CONST.LANG.NOT_LOGIN && !this.stopCheckLogin) {
+          if (result.msgType === 'notLogin' && !this.stopCheckLogin) {
             Est.trigger('checkLogin');
           }
           if (typeof options.success != 'undefined') {

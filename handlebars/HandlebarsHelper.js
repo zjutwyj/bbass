@@ -293,6 +293,7 @@ Handlebars.registerHelper('PIC', function(name, number, options) {
     domain = options.hash.domain;
   }
   if (name) {
+    name = name.replace(/\\/img, '/');
     version += (name.indexOf('?') > -1 ? ('&v=' + Est.hash(CONST.APP_VERSION)) :
       '?v=' + Est.hash(CONST.APP_VERSION));
     if (Est.startsWidth(name, 'CONST')) {

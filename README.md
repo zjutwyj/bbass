@@ -45,6 +45,9 @@ var detail = BaseDetail.extend({
     });
   }
 });
+var instancd = new BaseDetail({
+  id: 1    // 如果传入ID参数， 则系统会自动请求详细表单内容
+});
 ```
 
 ### 组件生命周期及初始配置参数说明
@@ -146,7 +149,10 @@ var Module = BaseView.extend({
   beforeSave: function(){},
 
   // 模型类保存后
-  afterSave: fucntion(),
+  afterSave: fucntion(model, response){},
+
+  // 保存失败回调
+  errorSave: function(response){},
 
   // 组件销毁时
   destory: function(){}
@@ -179,12 +185,16 @@ this._region('imagePickerConfig', ImagePickerConfig, {
 bb-render: 需要重新渲染的元素或属性，后面带:style(样式) :class(属性) :html(内容) :value(表单)若不带则整个dom替换掉
            当同一个元素带多个属性时，可简写为.bind:style:html:class<br>
 bb-change: 事件函数(其中参数为改变的字段名称)<br>
+【提示:】 使用:html时， 确保子元素没有使用指令，否则指令将失效
 
 ### 表单元素双向绑定
 <input bb-model="name:keyup" type="text" class="text" />
 ```js
 bb-model: 模型类字段  后面的:keyup表示按下某个键弹起时触发，默认为:change (注：建议添加value="{{name}}",懒执行，提高性能)
 ```
+
+### 表单验证
+详见：example/DomainComponent.js
 
 ### 事件绑定
 <input bb-click="handleAdd" type="button" value="添加表单" class="abutton faiButton faiButton-hover" />
@@ -446,6 +456,10 @@ new BaseService().factory({
 兼容所有浏览器(包括IE6789)
 
 ### 更新记录
+>2016.08.28<br>
+添加errorSave方法
+修改afterSave参数
+
 >2016.07.19<br>
 新增onReady约定<br>
 
