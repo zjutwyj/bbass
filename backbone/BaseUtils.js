@@ -176,6 +176,12 @@ var BaseUtils = {
       window.$loading = $('<div id="loading" class="loading"><div class="object" id="object_one">' +
         '</div><div class="object" id="object_two"></div><div class="object" id="object_three"></div></div>');
       $('body').append(window.$loading);
+      if (window.$loading_timer){
+        clearTimeout(window.$loading_timer);
+      }
+      window.$loading_timer = setTimeout(function(){
+        BaseUtils.removeLoading();
+      }, 10000);
     } catch (e) {}
     return window.$loading;
   },

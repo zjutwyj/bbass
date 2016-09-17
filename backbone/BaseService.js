@@ -154,13 +154,23 @@ BaseService.prototype = {
     var params = '';
     var cacheId = '';
     var result = null;
+    var ajaxTimeout = null;
+
     options = Est.extend({
       select: false,
       extend: false,
       defaults: false,
       tree: false,
       defaultValue: null,
-      cache: false
+      timeout: 10000,
+      cache: false,
+      complete: function(XMLHttpRequest, status) {
+        BaseUtils.removeLoading();
+        if (status == 'timeout') {
+          ajaxTimeout.abort();
+          BaseUtils.tip('服务器繁忙， 请稍后再试');
+        }
+      }
     }, options);
 
     for (var key in options) {
@@ -181,12 +191,12 @@ BaseService.prototype = {
       if (CONST.DEBUG_LOCALSERVICE) {
         topResolve([]);
       } else {
-        ctx.ajax(options).done(function(result) {
+        ajaxTimeout = ctx.ajax(options).done(function(result) {
           var list = null;
 
-            if (result && result.msgType === 'notLogin') {
-              Est.trigger('checkLogin');
-            }
+          if (result && result.msgType === 'notLogin') {
+            Est.trigger('checkLogin');
+          }
           if (Est.typeOf(result) === 'string') {
             if (options.session && result.attributes) {
               app.addSession(cacheId, result);
@@ -235,7 +245,19 @@ BaseService.prototype = {
     var params = '';
     var cacheId = '';
     var result = null;
-    options = Est.extend({ cache: false }, options);
+    var ajaxTimeout = null;
+
+    options = Est.extend({
+      cache: false,
+      timeout: 10000,
+      complete: function(XMLHttpRequest, status) {
+        BaseUtils.removeLoading();
+        if (status == 'timeout') {
+          ajaxTimeout.abort();
+          BaseUtils.tip('服务器繁忙， 请稍后再试');
+        }
+      }
+    }, options);
 
     for (var key in options) {
       params += options[key];
@@ -255,7 +277,7 @@ BaseService.prototype = {
       if (CONST.DEBUG_LOCALSERVICE) {
         topResolve([]);
       } else {
-        ctx.ajax(options).done(function(result) {
+        ajaxTimeout = ctx.ajax(options).done(function(result) {
           if (result.msgType === 'notLogin') {
             Est.trigger('checkLogin');
           }

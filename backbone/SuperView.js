@@ -279,12 +279,14 @@ var SuperView = Backbone.View.extend({
         if (app.getDirective(dirName)) {
           compileStr = node.attr('bb-' + ngDirName);
           compileStr = compileStr || fieldName;
-          return { compile: app.getDirective(dirName).compile ? app.getDirective(dirName).compile : compileStr.indexOf('{{') > -1 ? Handlebars.compile(compileStr) : Est.compile('{{' + compileStr + '}}'), compileStr: selector};
+          return { compile: app.getDirective(dirName).compile ? app.getDirective(dirName).compile : compileStr.indexOf('{{') > -1 ? Handlebars.compile(compileStr) : Est.compile('{{' + compileStr + '}}'), compileStr: selector };
         } else {
           hbsStr = this._parseHbs(node.attr(ngDirName));
           if (!hbsStr && node.is('textarea')) hbsStr = this._parseHbs(node.html());
-          compileStr = Est.isEmpty(hbsStr) ? '{{' + fieldName + '}}' : hbsStr;
-          return { compile: Handlebars.compile(compileStr), compileStr: compileStr };
+          compileStr = (Est.isEmpty(hbsStr) || hbsStr.indexOf('{{') === -1) ? '{{' + fieldName + '}}' : hbsStr;
+          return { compile: Handlebars.compile(compileStr),
+            compileStr: compileStr,
+            directive: ngDirName==='value' ? selector.indexOf('bb-model')>-1? 'model': ngDirName:ngDirName };
         }
     }
   },
@@ -347,14 +349,16 @@ var SuperView = Backbone.View.extend({
       Est.trigger(this.cid + 'models');
     }*/
     _result = item.compile(model.attributes);
+
     // 比对数据，若无改变则返回
-    if (item.result === _result) {
+    if (!(!Est.isEmpty(item.directive) && item.directive === 'model') &&
+      item.result === _result) {
       return;
     }
     // 缓存node
     if (!item.node) {
       item.node = this.$(selector).eq(item.index);
-      if (item.node.size() === 0){
+      if (item.node.size() === 0) {
         // 针对bb-src
         item.node = this.$('.directive_' + Est.hash(selector)).eq(item.index);
         //console.error("error: call wyj for more info");
@@ -969,6 +973,24 @@ var SuperView = Backbone.View.extend({
     return this._getValue.call(this, path);
   },
   /**
+   * 获取整数类型的值
+   * @method _getInt
+   * @param  {[type]} path [description]
+   * @return {[type]}      [description]
+   */
+  _getInt: function(path) {
+    return parseInt(this._get(path), 10);
+  },
+  /**
+   * 获取浮点型数值
+   * @method _getFloat
+   * @param  {[type]} path [description]
+   * @return {[type]}      [description]
+   */
+  _getFloat: function(path) {
+    return parseFloat(this._get(path), 10);
+  },
+  /**
    * 获取model值,如果不存在，则设初始值
    *
    * @method [模型] - _getDefault ( 获取model值 )
@@ -1158,7 +1180,7 @@ var SuperView = Backbone.View.extend({
 
     Est.each(items_o, function(item) {
       if (Est.typeOf(item) === 'string' && item.indexOf('{') > -1) {
-        temp += (item+',');
+        temp += (item + ',');
       } else if (Est.typeOf(item) === 'string' && item.indexOf('}') > -1) {
         temp += item;
         list.push(temp);

@@ -308,6 +308,24 @@ var BaseModel = Backbone.Model.extend({
   _get: function(path) {
     return this.view ? this.view._get(path) : this._getValue(path);
   },
+  /**
+   * 获取整型值
+   * @method _getInt
+   * @param  {[type]} path [description]
+   * @return {[type]}      [description]
+   */
+  _getInt: function(path) {
+    return parseInt(this._get(path), 10);
+  },
+  /**
+   * 获取浮点型数值
+   * @method _getFloat
+   * @param  {[type]} path [description]
+   * @return {[type]}      [description]
+   */
+  _getFloat: function(path) {
+    return parseFloat(this._get(path), 10);
+  },
   initialize: function() {
     this._initialize();
   }
