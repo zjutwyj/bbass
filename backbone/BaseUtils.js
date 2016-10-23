@@ -181,7 +181,7 @@ var BaseUtils = {
       }
       window.$loading_timer = setTimeout(function(){
         BaseUtils.removeLoading();
-      }, 10000);
+      }, 30000);
     } catch (e) {}
     return window.$loading;
   },

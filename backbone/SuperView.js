@@ -13,7 +13,7 @@ var SuperView = Backbone.View.extend({
    * @param options
    * @author wyj 14.12.16
    */
-  constructor: function(options) {
+  constructor: function (options) {
     this.options = options || {};
     this._re_dup = {};
     this._re_selector = {};
@@ -31,9 +31,11 @@ var SuperView = Backbone.View.extend({
    * @method [构造] - _super
    * @return {[type]} [description]
    */
-  _super: function(type, args) {
+  _super: function (type, args) {
     if (Est.typeOf(type) === 'object') {
       this._initialize(type);
+    } else if (Est.isEmpty(type)){
+      return app.getView(this.viewId);
     } else {
       switch (type) {
         case 'data':
@@ -54,7 +56,7 @@ var SuperView = Backbone.View.extend({
             if (app.getView(this.viewId)[type].timer) {
               clearTimeout(app.getView(this.viewId)[type].timer);
             }
-            app.getView(this.viewId)[type].timer = setTimeout(this._bind(function() {
+            app.getView(this.viewId)[type].timer = setTimeout(this._bind(function () {
               app.getView(this.viewId)[type](args);
               app.getView(this.viewId)[type].timer = null;
             }), 20);
@@ -72,7 +74,7 @@ var SuperView = Backbone.View.extend({
    * @private
    * @return {[type]} [description]
    */
-  initialize: function() {
+  initialize: function () {
     this._super('_initialize');
   },
 
@@ -84,7 +86,7 @@ var SuperView = Backbone.View.extend({
    * @param  {[type]} options [description]
    * @return {[type]}         [description]
    */
-  _extend: function(options) {
+  _extend: function (options) {
     Est.extend(this.options, options);
   },
   /**
@@ -94,7 +96,7 @@ var SuperView = Backbone.View.extend({
    * @param  {[type]} viewId [description]
    * @return {[type]}        [description]
    */
-  _view: function(viewId) {
+  _view: function (viewId) {
     return app.getView(viewId + this.cid);
   },
   /**
@@ -106,7 +108,7 @@ var SuperView = Backbone.View.extend({
    * @param  {[type]} options  [description]
    * @return {[type]}          [description]
    */
-  _region: function(name, instance, options) {
+  _region: function (name, instance, options) {
     if (arguments.length === 1) {
       return this._view(name);
     }
@@ -118,7 +120,7 @@ var SuperView = Backbone.View.extend({
    * @method _service
    * @return {[type]} [description]
    */
-  _service: function(type, options) {
+  _service: function (type, options) {
     return Service[type](options);
   },
   /**
@@ -128,7 +130,7 @@ var SuperView = Backbone.View.extend({
    * @param name
    * @author wyj 15.1.13
    */
-  _navigate: function(name, options) {
+  _navigate: function (name, options) {
     options = options || true;
     Backbone.history.navigate(name, options);
   },
@@ -183,10 +185,10 @@ var SuperView = Backbone.View.extend({
    * @example
    *    this._singleBind('#model-name', this.model);
    */
-  _singleBind: function(parent, selector, model, changeFn) {
+  _singleBind: function (parent, selector, model, changeFn) {
     var _self = this;
 
-    $(selector, parent || this.$el).each(function() {
+    $(selector, parent || this.$el).each(function () {
 
       var bbModels = [];
       var bbModel = $(this).attr('bb-model');
@@ -196,7 +198,7 @@ var SuperView = Backbone.View.extend({
         bbModels = bbModel.split(':');
         bindType = bbModels.length > 1 ? bbModels[1] : 'change';
       }
-      $(this).off(bindType).on(bindType, function(e) {
+      $(this).off(bindType).on(bindType, function (e) {
         var val, pass, modelId, name, bbMod;
 
         if (e.keyCode === 37 || e.keyCode === 39 ||
@@ -241,10 +243,10 @@ var SuperView = Backbone.View.extend({
    * @example
    *        this._modelBind();
    */
-  _modelBind: function(parent, selector, changeFn) {
+  _modelBind: function (parent, selector, changeFn) {
     var _self = this;
     if (selector) this._singleBind(parent, selector, this.model, changeFn);
-    else this.$("input, textarea, select").each(function() {
+    else this.$("input, textarea, select").each(function () {
       _self._singleBind(null, $(this), _self.model, changeFn);
     });
   },
@@ -258,7 +260,7 @@ var SuperView = Backbone.View.extend({
    * @param  {string} ngAttrName 属性名称(针对IE浏览器)
    * @return {Handlebar}         模板
    */
-  _getCompileTemp: function(dirName, node, selector, ngDirName, fieldName) {
+  _getCompileTemp: function (dirName, node, selector, ngDirName, fieldName) {
     var hbsStr = null,
       compileStr = '';
 
@@ -284,9 +286,11 @@ var SuperView = Backbone.View.extend({
           hbsStr = this._parseHbs(node.attr(ngDirName));
           if (!hbsStr && node.is('textarea')) hbsStr = this._parseHbs(node.html());
           compileStr = (Est.isEmpty(hbsStr) || hbsStr.indexOf('{{') === -1) ? '{{' + fieldName + '}}' : hbsStr;
-          return { compile: Handlebars.compile(compileStr),
+          return {
+            compile: Handlebars.compile(compileStr),
             compileStr: compileStr,
-            directive: ngDirName==='value' ? selector.indexOf('bb-model')>-1? 'model': ngDirName:ngDirName };
+            directive: ngDirName === 'value' ? selector.indexOf('bb-model') > -1 ? 'model' : ngDirName : ngDirName
+          };
         }
     }
   },
@@ -300,7 +304,7 @@ var SuperView = Backbone.View.extend({
    * @param  {string} selector   选择符
    * @param  {string} ngAttrName 属性名称(针对IE)
    */
-  _replaceNode: function(attrName, node, result, selector, ngAttrName) {
+  _replaceNode: function (attrName, node, result, selector, ngAttrName) {
     switch (attrName) {
       case 'value':
         if (node.is(':checkbox')) {
@@ -342,7 +346,7 @@ var SuperView = Backbone.View.extend({
    * @param  {string} attrName   属性名称
    * @param  {string} ngAttrName 属性名称(针对IE)
    */
-  _handleReplace: function(item, model, selector, attrName, ngAttrName, name) {
+  _handleReplace: function (item, model, selector, attrName, ngAttrName, name) {
     var _result = '';
     /*if (this.collection && !Est.equal(model._previousAttributes.models, this.collection.models)) {
       model._previousAttributes.models = Est.clone(this.collection.models);
@@ -377,7 +381,7 @@ var SuperView = Backbone.View.extend({
    * @param  {object} item 缓存的模板对象
    * @return {array}       属性列表
    */
-  _getAttrList: function(item) {
+  _getAttrList: function (item) {
     var tempList = [],
       list = [],
       t_list = [];
@@ -387,7 +391,7 @@ var SuperView = Backbone.View.extend({
 
     if (item.indexOf(']:') > -1) {
       tempList = item.split(']:');
-      list = Est.map(tempList, function(_item, index) {
+      list = Est.map(tempList, function (_item, index) {
         if (index !== tempList.length - 1) {
           return _item + ']';
         } else {
@@ -415,7 +419,7 @@ var SuperView = Backbone.View.extend({
    * @param  {[type]} selector [description]
    * @return {[type]}          [description]
    */
-  _getSelectorSplit: function(selector) {
+  _getSelectorSplit: function (selector) {
     var hash = Est.hash(selector);
     if (hash in this._re_selector) return this._re_selector[hash];
 
@@ -424,7 +428,7 @@ var SuperView = Backbone.View.extend({
     var temp = '';
 
     if (selector.indexOf('[bb-watch=') > -1) {
-      Est.each(list, function(item) {
+      Est.each(list, function (item) {
         if (item.indexOf('[bb-') > -1 && item.indexOf(']') === -1) {
           temp = item;
         } else if (item.indexOf(']') > -1 && item.indexOf('[bb-') === -1) {
@@ -453,10 +457,10 @@ var SuperView = Backbone.View.extend({
    * @example
    *      this._viewReplace('#model-name', this.model);
    */
-  _viewReplace: function(selector, model, cbs, name) {
+  _viewReplace: function (selector, model, cbs, name) {
     try {
       if (!this._re_dup) this._re_dup = {};
-      Est.each(this._getSelectorSplit(selector), this._bind(function(item) {
+      Est.each(this._getSelectorSplit(selector), this._bind(function (item) {
         var list = [],
           _$template = '',
           _result = '',
@@ -494,14 +498,14 @@ var SuperView = Backbone.View.extend({
                   node = this.$el.find(list[0]);
                 }
 
-                $.each(node, $.proxy(function(index, node) {
+                $.each(node, $.proxy(function (index, node) {
                   this._re_dup[_hash].push(Est.extend(this._getCompileTemp(attrName, $(node), list[0], ngAttrName, name), {
                     hash: _hash + '' + index,
                     index: index
                   }));
                 }, this));
               }
-              Est.each(this._re_dup[_hash], function(item) {
+              Est.each(this._re_dup[_hash], function (item) {
                 this._handleReplace(item, model, list[0], attrName, ngAttrName, name);
               }, this);
             }
@@ -528,7 +532,7 @@ var SuperView = Backbone.View.extend({
       }));
 
       if (cbs) {
-        Est.each(cbs, function(cb) {
+        Est.each(cbs, function (cb) {
           cb.call(this, name);
         }, this);
       }
@@ -554,7 +558,7 @@ var SuperView = Backbone.View.extend({
    *
    *      });
    */
-  _watch: function(name, selector, callback) {
+  _watch: function (name, selector, callback) {
     var _self = this,
       triggerName,
       cb_hash = null,
@@ -570,7 +574,7 @@ var SuperView = Backbone.View.extend({
       list.push(name);
     }
 
-    Est.each(list, function(item) {
+    Est.each(list, function (item) {
       var modelId = item.replace(/^#?model\d?-(.+)$/g, "$1");
       /* debugger
        if (typeof this._get(modelId) === 'undefined'){
@@ -592,7 +596,7 @@ var SuperView = Backbone.View.extend({
         }
       }
       if (modelId in this.watchFields) {
-        Est.each(this._getSelectorSplit(selector), function(item) {
+        Est.each(this._getSelectorSplit(selector), function (item) {
 
           if (this.watchFields[modelId].indexOf(item) === -1) {
             this.watchFields[modelId] = this.watchFields[modelId] + ',' + item;
@@ -608,14 +612,14 @@ var SuperView = Backbone.View.extend({
       //if (!_self._options.modelBind || item.indexOf('model-') > -1) _self._modelBind(item);
       if (triggerName in temp_obj) return;
 
-      Est.off(temp_obj[triggerName] = triggerName).on(triggerName, function(triggerName, name) {
+      Est.off(temp_obj[triggerName] = triggerName).on(triggerName, function (triggerName, name) {
         _self._viewReplace(selector, _self.model, _self.cbMap[modelId], modelId);
         if (_self.update) _self.update.call(_self, modelId);
       });
 
       _self.model.off('change:' + (temp_obj[modelId] = modelId.split('.')[0]))
         .on('change:' + temp_obj[modelId],
-          function() {
+          function () {
             _self._viewReplace(selector, _self.model, _self.cbMap[modelId], modelId);
             if (_self.update) _self.update.call(_self, modelId);
           });
@@ -626,7 +630,7 @@ var SuperView = Backbone.View.extend({
    * 绑定模型类
    * @method [绑定] - _watchBind
    */
-  _watchBind: function(template) {
+  _watchBind: function (template) {
     var list = [],
       models = [];
 
@@ -635,7 +639,7 @@ var SuperView = Backbone.View.extend({
 
     if (Est.typeOf(template) === 'string') {
       models = template.match(new RegExp('(bb-watch=\\"(.+?)\"(\\s*)|bb-change=\\"(.+?)\"(\\s*)|bb-model=\\"(.+?)\"(\\s*))(bb-render=\\"(.+?)\\"\\s*)?(bb-change=\\"(.+?)\\"\\s*)?', 'img'));
-      Est.each(models, this._bind(function(item) {
+      Est.each(models, this._bind(function (item) {
         var watch = '',
           model = '',
           change = '',
@@ -678,7 +682,7 @@ var SuperView = Backbone.View.extend({
         });
       }));
     }
-    Est.each(list, this._bind(function(item) {
+    Est.each(list, this._bind(function (item) {
       this._watch(item.watch.split(','), item.render, Est.isEmpty(item.change) ? null : item.change);
     }));
     if (this.onWatch) {
@@ -693,12 +697,12 @@ var SuperView = Backbone.View.extend({
    * @param  {[type]} render [description]
    * @return {[type]}        [description]
    */
-  _getWatchRender: function(watch, render) {
+  _getWatchRender: function (watch, render) {
     var _watch = '';
     var _render = '';
     var _watchs = watch[1].split(',');
 
-    Est.each(_watchs, function(item) {
+    Est.each(_watchs, function (item) {
       var w_list = [];
 
       w_list = item.split(':');
@@ -727,7 +731,7 @@ var SuperView = Backbone.View.extend({
    * @param  {[type]} parent   [description]
    * @return {[type]}          [description]
    */
-  _bbBind: function(template, parent) {
+  _bbBind: function (template, parent) {
     var matchs = [],
       patt,
       hash,
@@ -744,7 +748,7 @@ var SuperView = Backbone.View.extend({
           value: result[2]
         });
       }
-      Est.each(this.bbList, this._bind(function(item) {
+      Est.each(this.bbList, this._bind(function (item) {
 
         hash = Est.hash(item.name + item.value);
         if (hash in map) return;
@@ -798,7 +802,7 @@ var SuperView = Backbone.View.extend({
    * @param  {string} value 字符串
    * @return {void}
    */
-  _handleEvents: function(parent, name, value) {
+  _handleEvents: function (parent, name, value) {
     var colonRe = /:([^:\$\s\(\)]*)/img,
       dollarRe = /\$([^:\$\s\(\)]*)/img,
       bracketRe = /\(([^:\$]*)\)/img,
@@ -806,29 +810,31 @@ var SuperView = Backbone.View.extend({
 
     var args = [],
       fn = nameRe.exec(value)[1],
-      colons = Est.map(value.match(colonRe) || [], function(str) {
+      colons = Est.map(value.match(colonRe) || [], function (str) {
         return str.replace(':', '');
       }),
-      dollars = Est.map(value.match(dollarRe) || [], function(str) {
+      dollars = Est.map(value.match(dollarRe) || [], function (str) {
         return str.replace('$', '');
       });
 
     var brackets = value.match(bracketRe);
     if (brackets) {
-      Est.each(brackets[0].split(','), this._bind(function(item) {
+      Est.each(brackets[0].split(','), this._bind(function (item) {
         var name = Est.trim(item.replace(/[\(|\)]/img, ''));
-        if (name.indexOf('\'') > -1) {
-          dollars.push(name.replace(/'/img, ''));
-        } else if (/^[\d\.]+$/img.test(name)) {
-          dollars.push(parseFloat(name));
-        } else {
-          dollars.push(this._get(name));
+        if (Est.isEmpty(name)) {
+          if (name.indexOf('\'') > -1) {
+            dollars.push(name.replace(/'/img, ''));
+          } else if (/^[\d\.]+$/img.test(name)) {
+            dollars.push(parseFloat(name));
+          } else {
+            dollars.push(this._get(name));
+          }
         }
       }));
     }
 
     if (this[fn]) parent.find('[bb-' + name + '="' + value + '"]').off(name).on(name,
-      this._bind(function(e) {
+      this._bind(function (e) {
         if (colons.length > 0) {
           switch (colons[0]) {
             case 'enter':
@@ -857,11 +863,11 @@ var SuperView = Backbone.View.extend({
    * @example
    *      this._stringify(['invite', 'message']);
    */
-  _stringifyJSON: function(array) {
+  _stringifyJSON: function (array) {
     var keys, result;
     if (!JSON.stringify) alert(CONST.LANG.JSON_TIP);
 
-    Est.each(array, function(item) {
+    Est.each(array, function (item) {
       keys = item.split('.');
       if (keys.length > 1) {
 
@@ -878,13 +884,13 @@ var SuperView = Backbone.View.extend({
    * @method [模型] - _parseJSON ( 反序列化字符串 )
    * @param array
    */
-  _parseJSON: function(array) {
+  _parseJSON: function (array) {
     var keys, result;
     var parse = JSON.parse || $.parseJSON;
 
     if (!parse) alert(CONST.LANG.JSON_TIP);
 
-    Est.each(array, function(item) {
+    Est.each(array, function (item) {
       keys = item.split('.');
       if (keys.length > 1) {
         result = Est.getValue(this.model.attributes, item);
@@ -910,7 +916,7 @@ var SuperView = Backbone.View.extend({
    *          sortField: 'orderList'
    *      })._moveUp(this.model);
    */
-  _setOption: function(obj) {
+  _setOption: function (obj) {
     Est.extend(this._options, obj);
     return this;
   },
@@ -921,9 +927,9 @@ var SuperView = Backbone.View.extend({
    * @private
    * @author wyj 14.12.10
    */
-  _initEnterEvent: function(options) {
+  _initEnterEvent: function (options) {
     if (options.speed > 1 && options.enter) {
-      this.$('input').keyup($.proxy(function(e) {
+      this.$('input').keyup($.proxy(function (e) {
         if (e.keyCode === CONST.ENTER_KEY) {
           this.$(options.enter).click();
         }
@@ -938,7 +944,7 @@ var SuperView = Backbone.View.extend({
    * @return {*}
    * @author wyj 15.1.29
    */
-  _getOption: function(name) {
+  _getOption: function (name) {
     return this._options[name];
   },
   /**
@@ -947,7 +953,7 @@ var SuperView = Backbone.View.extend({
    * @method _getTpl
    * @return {[type]} [description]
    */
-  _getTpl: function() {
+  _getTpl: function () {
     return '<div>' + this._options.template + '</div>';
   },
   /**
@@ -959,7 +965,7 @@ var SuperView = Backbone.View.extend({
    * @example
    *      this._getValue('tip.name');
    */
-  _getValue: function(path) {
+  _getValue: function (path) {
     return Est.getValue(this.model.attributes, path);
   },
   /**
@@ -969,7 +975,7 @@ var SuperView = Backbone.View.extend({
    * @param  {string} path [description]
    * @return {*}      [description]
    */
-  _get: function(path) {
+  _get: function (path) {
     return this._getValue.call(this, path);
   },
   /**
@@ -978,7 +984,7 @@ var SuperView = Backbone.View.extend({
    * @param  {[type]} path [description]
    * @return {[type]}      [description]
    */
-  _getInt: function(path) {
+  _getInt: function (path) {
     return parseInt(this._get(path), 10);
   },
   /**
@@ -987,7 +993,7 @@ var SuperView = Backbone.View.extend({
    * @param  {[type]} path [description]
    * @return {[type]}      [description]
    */
-  _getFloat: function(path) {
+  _getFloat: function (path) {
     return parseFloat(this._get(path), 10);
   },
   /**
@@ -999,7 +1005,7 @@ var SuperView = Backbone.View.extend({
    * @example
    *      this._getDefault('tip.name', 'd');
    */
-  _getDefault: function(path, value) {
+  _getDefault: function (path, value) {
     this._setDefault(path, value);
     return Est.getValue(this.model.attributes, path);
   },
@@ -1012,7 +1018,7 @@ var SuperView = Backbone.View.extend({
    * @example
    *      this._setDefault('tip.name', 'd');
    */
-  _setDefault: function(path, value) {
+  _setDefault: function (path, value) {
     var result = Est.getValue(this.model.attributes, path);
     if (Est.typeOf(result) === 'undefined' || Est.typeOf(result) === 'null') {
       Est.setValue(this.model.attributes, path, value);
@@ -1023,10 +1029,10 @@ var SuperView = Backbone.View.extend({
    * @method [模型] - _initDefault
    * @return {[type]} [description]
    */
-  _initDefault: function() {
+  _initDefault: function () {
     if (this.init && Est.typeOf(this.init) === 'function') {
       this.__def_vals_ = this.init.call(this) || {};
-      Est.each(this.__def_vals_, this._bind(function(value, key) {
+      Est.each(this.__def_vals_, this._bind(function (value, key) {
         this._setDefault(key, value);
       }));
     }
@@ -1037,7 +1043,7 @@ var SuperView = Backbone.View.extend({
    * @method [表单] - _reset ( 重置表单 )
    * @author wyj 14.11.18
    */
-  _reset: function(data) {
+  _reset: function (data) {
     this.model.attributes = {};
     data = Est.extend(Est.extend(this.model.defaults || {}, this.__def_vals_), data);
     this._set(this._getPath(data));
@@ -1048,7 +1054,7 @@ var SuperView = Backbone.View.extend({
    * @method _getPath
    * @return {[type]} [description]
    */
-  _getPath: function(data, pre) {
+  _getPath: function (data, pre) {
     var paths = [];
     var temp = data;
     if (!pre) { pre = ''; }
@@ -1062,9 +1068,9 @@ var SuperView = Backbone.View.extend({
 
     while (Est.keys(temp).length > 0) {
       data = temp;
-      Est.each(data, function(value, key) {
+      Est.each(data, function (value, key) {
         if (Est.typeOf(value) === 'object') {
-          Est.each(value, function(v, k) {
+          Est.each(value, function (v, k) {
             temp[key + '.' + k] = v;
           });
         } else {
@@ -1076,7 +1082,7 @@ var SuperView = Backbone.View.extend({
         delete temp[key];
       });
     }
-    Est.each(paths, this._bind(function(item) {
+    Est.each(paths, this._bind(function (item) {
       temp[pre + item.path] = item.value;
     }));
 
@@ -1093,7 +1099,7 @@ var SuperView = Backbone.View.extend({
    * @param  {string} value [description]
    * @return {string}       [description]
    */
-  _getField: function(value) {
+  _getField: function (value) {
     var str = "",
       list = [],
       result = null;
@@ -1101,7 +1107,7 @@ var SuperView = Backbone.View.extend({
     str = value.replace(/^[!|(]*(\w+(?:\.\w+)*)(?:[\s|\.|>|<|!|:=])?.*$/img, '$1');
     list = str.replace(/({{|}})/img, '').split(/\s/);
 
-    Est.each(list, this._bind(function(item) {
+    Est.each(list, this._bind(function (item) {
       result = this._loopField(item);
       if (result !== null) {
         return false;
@@ -1117,7 +1123,7 @@ var SuperView = Backbone.View.extend({
    * @param  {[type]} value [description]
    * @return {[type]}       [description]
    */
-  _loopField: function(value) {
+  _loopField: function (value) {
     var list = [];
 
     if (Est.typeOf(this._get(value)) === 'undefined') {
@@ -1138,7 +1144,7 @@ var SuperView = Backbone.View.extend({
    * @param  {[type]} value [description]
    * @return {[type]}       [description]
    */
-  _getBoolean: function(value) {
+  _getBoolean: function (value) {
     var bool = Est.compile('{{' + value + '}}', this.model.attributes);
 
     if (bool === 'true' || bool === '1') {
@@ -1159,7 +1165,7 @@ var SuperView = Backbone.View.extend({
    * @param  {[type]}  str [description]
    * @return {Boolean}     [description]
    */
-  _isBoolean: function(str) {
+  _isBoolean: function (str) {
     return (str === 'true' || str === 'false');
   },
   /**
@@ -1170,7 +1176,7 @@ var SuperView = Backbone.View.extend({
    * @param  {string} value 字符串
    * @return {object}
    */
-  _getObject: function(str) {
+  _getObject: function (str) {
 
     var result = '',
       object = { fields: {} },
@@ -1178,7 +1184,7 @@ var SuperView = Backbone.View.extend({
       temp = '',
       items_o = Est.trim(str).substring(1, str.length - 1).split(',');
 
-    Est.each(items_o, function(item) {
+    Est.each(items_o, function (item) {
       if (Est.typeOf(item) === 'string' && item.indexOf('{') > -1) {
         temp += (item + ',');
       } else if (Est.typeOf(item) === 'string' && item.indexOf('}') > -1) {
@@ -1192,7 +1198,7 @@ var SuperView = Backbone.View.extend({
       }
     });
 
-    Est.each(list, function(item) {
+    Est.each(list, function (item) {
       var list = item.split(':');
       var r = '';
       var fnInfo = {};
@@ -1231,7 +1237,7 @@ var SuperView = Backbone.View.extend({
    * @param  {object} obj 模型类
    * @return {object}
    */
-  _getFunction: function(str, obj) {
+  _getFunction: function (str, obj) {
     var bracketRe = /\(([^:\$]*)\)/img,
       key = null,
       helper = Est.trim(str.replace(/\(.*\)/g, ''));
@@ -1239,7 +1245,7 @@ var SuperView = Backbone.View.extend({
 
     var brackets = str.match(bracketRe);
     if (brackets) {
-      Est.each(brackets[0].split(','), function(item) {
+      Est.each(brackets[0].split(','), function (item) {
         var arg = Est.trim(item.split('.')[0].replace(/[\(|\)]/img, ''));
         if (!key) {
           key = arg;
@@ -1274,7 +1280,7 @@ var SuperView = Backbone.View.extend({
    * @example
    *      this._setValue('tip.name', 'aaa');
    */
-  _setValue: function(path, val) {
+  _setValue: function (path, val) {
     // just for trigger
     if (!Est.equal(Est.getValue(this.model.attributes, path), val)) {
       Est.setValue(this.model.attributes, path, val);
@@ -1289,11 +1295,11 @@ var SuperView = Backbone.View.extend({
    * @param {string/object} path [description]
    * @param {string/object} val  [description]
    */
-  _set: function(path, val) {
+  _set: function (path, val) {
     this._m_change_ = false;
 
     if (Est.typeOf(path) === 'object') {
-      this._baseSetValues(path);
+      this._baseSetValues(this._getPath(path));
     } else {
       this._setValue(path, val);
     }
@@ -1302,7 +1308,7 @@ var SuperView = Backbone.View.extend({
         this.options.onUpdate.call(this, this.model.toJSON());
       }
       if (this.change && !this.change.timer) {
-        this.change.timer = setTimeout(this._bind(function() {
+        this.change.timer = setTimeout(this._bind(function () {
           this.change.call(this, this.viewType, path);
           this.change.timer = null;
         }), 20);
@@ -1319,8 +1325,8 @@ var SuperView = Backbone.View.extend({
    * @param  {object} keyVals [description]
    * @return {*}         [description]
    */
-  _baseSetValues: function(keyVals) {
-    Est.each(keyVals, this._bind(function(value, key) {
+  _baseSetValues: function (keyVals) {
+    Est.each(keyVals, this._bind(function (value, key) {
       this._setValue(key, value);
     }));
   },
@@ -1332,9 +1338,9 @@ var SuperView = Backbone.View.extend({
    * @param  {[type]} val  [description]
    * @return {[type]}      [description]
    */
-  _baseSetAttr: function(path, val) {
+  _baseSetAttr: function (path, val) {
     if (Est.typeOf(path) === 'string') Est.setValue(this.model.attributes, path, val);
-    else Est.each(path, this._bind(function(value, key) {
+    else Est.each(path, this._bind(function (value, key) {
       Est.setValue(this.model.attributes, key, value);
     }));
   },
@@ -1348,7 +1354,7 @@ var SuperView = Backbone.View.extend({
    *         'args.styles.name.display': 'block'
    *       });
    */
-  _setValues: function(keyVals) {
+  _setValues: function (keyVals) {
     this._baseSetValues(keyVals);
     if (this._options.onChange) {
       this._options.onChange.call(this, keyVals);
@@ -1361,7 +1367,7 @@ var SuperView = Backbone.View.extend({
    * @method [模型] - _setAttr
    * @param {[type]} keyVals [description]
    */
-  _setAttr: function(path, val) {
+  _setAttr: function (path, val) {
     this._baseSetAttr(path, val);
   },
   /**
@@ -1371,7 +1377,7 @@ var SuperView = Backbone.View.extend({
    * @method [模型] - _setAttrValues ( 新版将移除 )
    * @param {[type]} keyVals [description]
    */
-  _setAttributes: function(path, val) {
+  _setAttributes: function (path, val) {
     this._baseSetAttr(path, val);
     if (this._options.onChange) {
       this._options.onChange.call(this, path);
@@ -1387,7 +1393,7 @@ var SuperView = Backbone.View.extend({
    *  @example
    *      this._getTarget(e);
    */
-  _getTarget: function(e) {
+  _getTarget: function (e) {
     return e.target ? $(e.target) : $(e.currentTarget);
   },
   /**
@@ -1399,7 +1405,7 @@ var SuperView = Backbone.View.extend({
    *  @example
    *      this._getEventTarget(e);
    */
-  _getEventTarget: function(e) {
+  _getEventTarget: function (e) {
     return e.currentTarget ? $(e.currentTarget) : $(e.target);
   },
   /**
@@ -1408,7 +1414,7 @@ var SuperView = Backbone.View.extend({
    * @method _beforeTransition
    * @return {[type]} [description]
    */
-  _beforeTransition: function() {
+  _beforeTransition: function () {
     this.$el.css({ 'visibility': 'hidden' });
   },
   /**
@@ -1417,7 +1423,7 @@ var SuperView = Backbone.View.extend({
    * @method _afterTransition
    * @return {[type]} [description]
    */
-  _afterTransition: function() {
+  _afterTransition: function () {
     this.$el.css({ 'visibility': 'visible' });
   },
   /**
@@ -1437,7 +1443,7 @@ var SuperView = Backbone.View.extend({
    *      }));
    *  });
    */
-  _one: function(name, callback) {
+  _one: function (name, callback) {
     try {
       var _name, isArray = Est.typeOf(name) === 'array';
       var _nameList = [];
@@ -1449,7 +1455,7 @@ var SuperView = Backbone.View.extend({
 
       if (this[_one]) {
         if (isArray) {
-          Est.each(name, function(item) {
+          Est.each(name, function (item) {
             _nameList.push(item.replace(/^(.+)-(\d+)?$/g, "$1"));
           });
           this._require(_nameList, callback);
@@ -1473,7 +1479,7 @@ var SuperView = Backbone.View.extend({
    *            new Module();
    *        });
    */
-  _require: function(dependent, callback) {
+  _require: function (dependent, callback) {
     seajs.use(dependent, Est.proxy(callback, this));
   },
   /**
@@ -1485,9 +1491,9 @@ var SuperView = Backbone.View.extend({
    * @example
    *  this._delay(function(){}, 5000);
    */
-  _delay: function(fn, time) {
-    setTimeout(Est.proxy(function() {
-      setTimeout(Est.proxy(function() {
+  _delay: function (fn, time) {
+    setTimeout(Est.proxy(function () {
+      setTimeout(Est.proxy(function () {
         if (fn) fn.call(this);
       }, this), time);
     }, this), 0);
@@ -1499,7 +1505,7 @@ var SuperView = Backbone.View.extend({
    * @param  {Function} fn [description]
    * @return {[type]}      [description]
    */
-  _bind: function(fn) {
+  _bind: function (fn) {
     return Est.proxy(fn, this);
   },
   /**
@@ -1509,27 +1515,27 @@ var SuperView = Backbone.View.extend({
    * @param  {[type]} template [description]
    * @return {[type]}          [description]
    */
-  _parseHbs: function(template) {
+  _parseHbs: function (template) {
     if (Est.isEmpty(template)) {
       return null;
     }
     if (template.indexOf('_quote_') > -1) {
       return template;
     }
-    return template.replace(/{{#If\s+(.*?)}}/mg, function(expression) {
+    return template.replace(/{{#If\s+(.*?)}}/mg, function (expression) {
       return "{{#If '" + expression.replace(/{{#If\s+(.*)}}/mg, '$1').replace(/'/mg, '_quote_') + "'}}";
     });
   },
-  _empty: function() {},
+  _empty: function () {},
   /**
    * 销毁系统绑定的事件及其它
    *
    * @method [销毁] - _destroy
    * @return {[type]} [description]
    */
-  _destroy: function() {
+  _destroy: function () {
     this._re_dup = null;
-    Est.each(this._directives_, this._bind(function(item) {
+    Est.each(this._directives_, this._bind(function (item) {
       if (app.getDirective(item.name) && app.getDirective(item.name).unbind) {
         app.getDirective(item.name).unbind.call(this, item.object);
       }
@@ -1540,12 +1546,12 @@ var SuperView = Backbone.View.extend({
    *
    * @method _close
    */
-  _close: function() {
+  _close: function () {
     if (app.getDialog(this.viewId)) {
       app.getDialog(this.viewId).close().remove();
     }
   },
-  render: function() {
+  render: function () {
     this._render();
   },
   /**
@@ -1591,7 +1597,7 @@ var SuperView = Backbone.View.extend({
    *                }
    *            }, this);
    */
-  _dialog: function(options, context) {
+  _dialog: function (options, context) {
     var ctx = context || this;
     var viewId = options.viewId ? options.viewId :
       Est.typeOf(options.dialogId) === 'string' ? options.dialogId : options.moduleId;
@@ -1618,7 +1624,7 @@ var SuperView = Backbone.View.extend({
       el: '#base_item_dialog' + viewId,
       content: options.content || '<div id="' + viewId + '"></div>',
       viewId: viewId,
-      onshow: function() {
+      onshow: function () {
         try {
           var result = options.onShow && options.onShow.call(this, options);
           if (typeof result !== 'undefined' && !result)
@@ -1631,7 +1637,7 @@ var SuperView = Backbone.View.extend({
                 options.dialogId + '"></div>'
             }).addView(options.dialogId, new options.moduleId(options));
           } else if (Est.typeOf(options.moduleId) === 'string') {
-            seajs.use([options.moduleId], function(instance) {
+            seajs.use([options.moduleId], function (instance) {
               try {
                 if (!instance) {
                   console.error(options.moduleId + ' is not defined');
@@ -1649,7 +1655,7 @@ var SuperView = Backbone.View.extend({
           console.log(e);
         }
       },
-      onclose: function() {
+      onclose: function () {
         if (app.getPanel(options.viewId)) app.removePanel(options.viewId);
         if (options.onClose) options.onClose.call(ctx, options);
         app.getDialogs().pop();
@@ -1666,11 +1672,11 @@ var SuperView = Backbone.View.extend({
    *      <div class="tool-tip" title="提示内容">content</div>
    *      this._initToolTip();
    */
-  _initToolTip: function($parent, className) {
+  _initToolTip: function ($parent, className) {
     var _className = className || '.tool-tip';
     var $tip = $parent ? $(_className, $parent) : this.$(_className);
 
-    $tip.hover(function(e) {
+    $tip.hover(function (e) {
       var title = $(this).attr('data-title') || $(this).attr('title');
       var offset = $(this).attr('data-offset') || 0;
       if (Est.isEmpty(title)) return;
@@ -1690,14 +1696,14 @@ var SuperView = Backbone.View.extend({
       if (!app.getData('toolTipList')) app.addData('toolTipList', []);
       app.getData('toolTipList').push(Est.hash(title));
 
-      $(window).one('click', Est.proxy(function() {
-        Est.each(app.getData('toolTipList'), function(item) {
+      $(window).one('click', Est.proxy(function () {
+        Est.each(app.getData('toolTipList'), function (item) {
           if (app.getDialog(item)) app.getDialog(item).close();
         });
         app.addData('toolTipList', []);
 
       }, this));
-    }, function() {
+    }, function () {
       try {
         app.getDialog(Est.hash($(this).attr('data-title') || $(this).attr('title'))).close();
       } catch (e) {}

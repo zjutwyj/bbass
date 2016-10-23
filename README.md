@@ -41,9 +41,18 @@ var detail = BaseDetail.extend({
         baseId: 'id',
         baseUrl: CONST.API + '/product/detail'
       }),
-      form: '.form#submit'
+      form: '#form:#submit', // 表单提交配置,#form为提交作用域，#submit为提交按钮
     });
-  }
+  },
+
+  // 模型类保存前
+  beforeSave: function(){},
+
+  // 模型类保存后
+  afterSave: fucntion(model, response){},
+
+  // 保存失败回调
+  errorSave: function(response){}
 });
 var instancd = new BaseDetail({
   id: 1    // 如果传入ID参数， 则系统会自动请求详细表单内容
@@ -242,7 +251,7 @@ bb-disabled="models.length"
 
 ### 组件通用方法
 ```js
-this._super(type); // 引用父类，当参数type为view时返回上级视图 model时返回上级模型类，data上级模型类数据,options返回上级参数,"_init" 执行上级方法,为对象时调用父级的_initialize()方法 (注：BaseItem中调用BaseList中的方法，尽量用this._super('superFn', args))
+this._super(type); // 引用父类，当参数type为view时返回上级视图 model时返回上级模型类，"data"上级模型类数据,options返回上级参数,"_init" 执行上级方法,为对象时调用父级的_initialize()方法 (注：BaseItem中调用BaseList中的方法，尽量用this._super('superFn', args))
 this._view('viewId');// 获取视图(注：默认带this.cid)
 this._region('name', ProductList, {}); // 添加视图区域,当一个参数时则为获取视图(注：默认带this.cid)
 this._service('productList').then(function(result){}); // 数据请求服务

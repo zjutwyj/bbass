@@ -241,7 +241,11 @@ var BaseDetail = SuperView.extend({
       var bt = $button.is('input');
       var preText = ctx.preText = bt ? $button.val() : $button.html();
       passed = true; // 设置验证通过
-      ctx.formElemnet.submit();
+      try {
+        ctx.formElemnet.submit();
+      } catch (e) {
+
+      }
       $("input, textarea, select", $(ctx.formElemnet)).each(function() {
         var name, val, pass, modelKey, modelList;
         name = $(this).attr('name');
