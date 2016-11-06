@@ -34,7 +34,7 @@ var SuperView = Backbone.View.extend({
   _super: function (type, args) {
     if (Est.typeOf(type) === 'object') {
       this._initialize(type);
-    } else if (Est.isEmpty(type)){
+    } else if (Est.isEmpty(type)) {
       return app.getView(this.viewId);
     } else {
       switch (type) {
@@ -678,7 +678,7 @@ var SuperView = Backbone.View.extend({
         list.push({
           watch: watch.length > 1 ? watch[1] : model[1].split(':')[0],
           render: render.length > 1 ? render[1] : '',
-          change: change.length > 1 ? change[1] : null
+          change: change.length > 1 ? Est.trim(change[1].substring(0, change[1].indexOf('('))) : null: null
         });
       }));
     }
@@ -1031,7 +1031,7 @@ var SuperView = Backbone.View.extend({
    */
   _initDefault: function () {
     if (this.init && Est.typeOf(this.init) === 'function') {
-      this.__def_vals_ = this.init.call(this) || {};
+      this.__def_vals_ = this.init.call(this, this._attributes) || {};
       Est.each(this.__def_vals_, this._bind(function (value, key) {
         this._setDefault(key, value);
       }));
@@ -1381,6 +1381,30 @@ var SuperView = Backbone.View.extend({
     this._baseSetAttr(path, val);
     if (this._options.onChange) {
       this._options.onChange.call(this, path);
+    }
+  },
+  /**
+   * 获取请求参数
+   * @param  {[type]} name [description]
+   * @return {[type]}      [description]
+   */
+  _getParam: function (name) {
+    if (this.collection) {
+      return this.collection.__params[name];
+    } else {
+      return this.model.params[name];
+    }
+  },
+  /**
+   * 设置请求参数
+   * @param {[type]} name  [description]
+   * @param {[type]} value [description]
+   */
+  _setParam: function (name, value) {
+    if (this.collection) {
+      this.collection._setParam(name, value);
+    } else {
+      this.model.params[name] = value;
     }
   },
 

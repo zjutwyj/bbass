@@ -21,7 +21,10 @@ var list = BaseList.extend({
         deleteTip: true   // 删除提示
       }),
       collection: BaseCollection.extend({
-        url: CONST.API + '/product/list'
+        url: function() {
+          var end = '?page=' + this.paginationModel.get('page') + '&pageSize=' + this.paginationModel.get('pageSize');
+          return CONST.PAGE_API + '/index/list' + end;
+        }
       }),
       item: BaseItem.extend({
         tagName: 'li',
@@ -52,7 +55,10 @@ var detail = BaseDetail.extend({
   afterSave: fucntion(model, response){},
 
   // 保存失败回调
-  errorSave: function(response){}
+  errorSave: function(response){},
+
+  // 获取数据出错
+  errorFetch: function(response){}
 });
 var instancd = new BaseDetail({
   id: 1    // 如果传入ID参数， 则系统会自动请求详细表单内容
@@ -285,6 +291,9 @@ this._getPath(this._get('args.color'), 'args.'); // 获取路径(第二个参数
 this._getField('remaining!== models.length'); => 'remaining'// 获取表达式字段
 this._getBoolean('true');   // 获取boolean值，'true' '1' 'str' 均为true, 'false', '0', '' 均为false
 this._getObject('{name: 'aa', value: 'getValue'}'); // 获取对象
+
+this._setParam('name', 'value');    // 设置请求参数
+this._getParam('name');             // 获取请求参数
 ```
 
 ### 模型类操作
@@ -465,6 +474,9 @@ new BaseService().factory({
 兼容所有浏览器(包括IE6789)
 
 ### 更新记录
+>2016.11.06<br>
+添加_getParam与_setParam 请求参数获取与设置方法
+
 >2016.08.28<br>
 添加errorSave方法
 修改afterSave参数

@@ -149,6 +149,12 @@ var BaseDetail = SuperView.extend({
         if (response.msgType === 'notLogin') {
           Est.trigger('checkLogin');
         }
+        if (!response.success) {
+          if (ctx.errorFetch) {
+            ctx.errorFetch.call(ctx, response);
+          }
+        }
+        ctx._attributes = response.attributes;
         ctx.model.set('_isAdd', ctx._isAdd = false);
         if (ctx.afterLoad) ctx.afterLoad.call(ctx);
         ctx.render();

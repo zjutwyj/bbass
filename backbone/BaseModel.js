@@ -24,13 +24,13 @@ var BaseModel = Backbone.Model.extend({
    * @return {*}
    * @author wyj 14.11.16
    */
-  url: function() {
+  url: function () {
     var base = this.baseUrl;
     var _url = '';
     if (!base) return '';
     if (Est.typeOf(base) === 'function')
       base = base.call(this);
-    this.params = this.params ? this.params : '';
+    this.params = this.params ? this.params + this._getParams(): this._getParams();
     var sep = Est.isEmpty(this.params) ? '' : '?';
     if (this.isNew() && Est.isEmpty(this.id)) return base + sep + this.params;
     _url = base + (base.charAt(base.length - 1) == '/' ? '' : '/') + this.id + sep + this.params;
@@ -44,8 +44,9 @@ var BaseModel = Backbone.Model.extend({
    * @example
    *      this._initialize();
    */
-  _initialize: function(options) {
+  _initialize: function (options) {
     this.validateMsg = null;
+    this.__params = this.__params || {};
   },
   /**
    * 过滤结果, 并提示信息对话框, 若不想提示信息可以设置hideTip为true
@@ -75,7 +76,7 @@ var BaseModel = Backbone.Model.extend({
    * @return {*}
    * @author wyj 14.11.16
    */
-  parse: function(response, options) {
+  parse: function (response, options) {
     var ctx = this,
       buttons = [],
       _isNew = false;
@@ -100,7 +101,7 @@ var BaseModel = Backbone.Model.extend({
         if (ctx.isNew() && this.continueAdd) {
           buttons.push({
             value: CONST.LANG.ADD_CONTINUE,
-            callback: function() {
+            callback: function () {
               ctx.set('id', null);
               ctx.set(ctx.baseId, null);
             }
@@ -111,7 +112,7 @@ var BaseModel = Backbone.Model.extend({
       if (this.saveTip) {
         buttons.push({
           value: CONST.LANG.CONFIRM,
-          callback: function() {
+          callback: function () {
             this.close();
           },
           autofocus: true
@@ -126,7 +127,7 @@ var BaseModel = Backbone.Model.extend({
           button: buttons
         });
         if (!this.continueAdd) {
-          setTimeout(function() {
+          setTimeout(function () {
             app.getDialog('dialog_msg') && (ctx.autoHide || !_isNew) &&
               app.getDialog('dialog_msg').close().remove();
           }, 2000);
@@ -143,7 +144,7 @@ var BaseModel = Backbone.Model.extend({
     if (response.attributes && response.attributes.data) {
       var keys = Est.keys(response.attributes);
       if (keys.length > 1) {
-        Est.each(keys, function(item) {
+        Est.each(keys, function (item) {
           if (item !== 'data')
             response.attributes['data'][item] = response.attributes[item];
         });
@@ -177,7 +178,7 @@ var BaseModel = Backbone.Model.extend({
    *          hideOkBtn: false // 是否隐藏确定按钮
    *        });
    */
-  _saveField: function(keyValue, ctx, options) {
+  _saveField: function (keyValue, ctx, options) {
     var wait = options.async || true;
     var newModel = new ctx.initModel({
       id: keyValue.id || ctx.model.get('id')
@@ -190,7 +191,7 @@ var BaseModel = Backbone.Model.extend({
     newModel.set('editField', true);
     if (newModel.baseUrl) {
       newModel.save(null, {
-        success: function(model, result) {
+        success: function (model, result) {
           if (result.msgType === 'notLogin' && !this.stopCheckLogin) {
             Est.trigger('checkLogin');
           }
@@ -212,10 +213,10 @@ var BaseModel = Backbone.Model.extend({
    * @return {*}
    * @author wyj 14.12.18
    */
-  _getChildren: function(collection) {
-    return Est.map(this.get('children'), function(ref) {
+  _getChildren: function (collection) {
+    return Est.map(this.get('children'), function (ref) {
       // Lookup by ID in parent collection if string/num
-      if (typeof(ref) == 'string' || typeof(ref) == 'number')
+      if (typeof (ref) == 'string' || typeof (ref) == 'number')
         return collection.get(ref);
       // Else assume its a real object
       return ref;
@@ -229,7 +230,7 @@ var BaseModel = Backbone.Model.extend({
    * @example
    *      this.model._hideTip();
    */
-  _hideTip: function() {
+  _hideTip: function () {
     this.hideTip = true;
   },
   /**
@@ -240,7 +241,7 @@ var BaseModel = Backbone.Model.extend({
    * @example
    *      this.model._toggle();
    */
-  _toggle: function() {
+  _toggle: function () {
     this.set('checked', !this.get('checked'));
   },
   /**
@@ -259,7 +260,7 @@ var BaseModel = Backbone.Model.extend({
    *         });
    *        }
    */
-  _validation: function(attributes, callback) {
+  _validation: function (attributes, callback) {
     if (!attributes.silent && callback) {
       callback.call(this, attributes);
     }
@@ -274,7 +275,7 @@ var BaseModel = Backbone.Model.extend({
    * @example
    *      this._getValue('tip.name');
    */
-  _getValue: function(path) {
+  _getValue: function (path) {
     return Est.getValue(this.attributes, path);
   },
   /**
@@ -287,7 +288,7 @@ var BaseModel = Backbone.Model.extend({
    * @example
    *      this._setValue('tip.name', 'aaa');
    */
-  _setValue: function(path, val) {
+  _setValue: function (path, val) {
     Est.setValue(this.attributes, path, val);
   },
   /**
@@ -296,7 +297,7 @@ var BaseModel = Backbone.Model.extend({
    * @param {[type]} path [description]
    * @param {[type]} val  [description]
    */
-  _set: function(path, val) {
+  _set: function (path, val) {
     return this.view ? this.view._set(path, val) : this._setValue(path, val);
   },
   /**
@@ -305,7 +306,7 @@ var BaseModel = Backbone.Model.extend({
    * @param  {[type]} path [description]
    * @return {[type]}      [description]
    */
-  _get: function(path) {
+  _get: function (path) {
     return this.view ? this.view._get(path) : this._getValue(path);
   },
   /**
@@ -314,7 +315,7 @@ var BaseModel = Backbone.Model.extend({
    * @param  {[type]} path [description]
    * @return {[type]}      [description]
    */
-  _getInt: function(path) {
+  _getInt: function (path) {
     return parseInt(this._get(path), 10);
   },
   /**
@@ -323,10 +324,41 @@ var BaseModel = Backbone.Model.extend({
    * @param  {[type]} path [description]
    * @return {[type]}      [description]
    */
-  _getFloat: function(path) {
+  _getFloat: function (path) {
     return parseFloat(this._get(path), 10);
   },
-  initialize: function() {
+  /**
+   * 设置请求参数
+   * @method _setParam
+   *
+   * @param {[type]} name  [description]
+   * @param {[type]} value [description]
+   */
+  _setParam: function (name, value) {
+    this.__params[name] = value;
+  },
+  /**
+   * 获取请求参数
+   * @param  {[type]} name [description]
+   * @return {[type]}      [description]
+   */
+  _getParam: function (name) {
+    return this.__params[name];
+  },
+  /**
+   * 拼装请求参数
+   * @method _getParams
+   *
+   * @return {[type]} [description]
+   */
+  _getParams: function () {
+    var result = '';
+    Est.each(this.__params, function (val, key) {
+      result += ('&' + key + '=' + val);
+    }, this);
+    return result;
+  },
+  initialize: function () {
     this._initialize();
   }
 });

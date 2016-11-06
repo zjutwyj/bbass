@@ -16,7 +16,7 @@ var PaginationModel = Backbone.Model.extend({
     pageSize: 16,
     count: 0
   },
-  initialize: function() {}
+  initialize: function () {}
 });
 
 var BaseCollection = Backbone.Collection.extend({
@@ -29,7 +29,7 @@ var BaseCollection = Backbone.Collection.extend({
    * @param options
    * @author wyj 14.12.16
    */
-  constructor: function(options) {
+  constructor: function (options) {
     this.options = options || {};
     Backbone.Collection.apply(this, [null, arguments]);
   },
@@ -38,7 +38,7 @@ var BaseCollection = Backbone.Collection.extend({
    * @method [构造] - _super
    * @return {[type]} [description]
    */
-  _super: function(type, args) {
+  _super: function (type, args) {
     if (Est.typeOf(type) === 'object') {
       this._initialize(type);
     } else {
@@ -76,7 +76,7 @@ var BaseCollection = Backbone.Collection.extend({
                 this._initialize();
               }
    */
-  _initialize: function() {
+  _initialize: function () {
     this._baseUrl = this.url;
     this.__params = this.__params || {};
     if (!this.paginationModel) {
@@ -86,7 +86,7 @@ var BaseCollection = Backbone.Collection.extend({
       });
     }
   },
-  initialize: function() {
+  initialize: function () {
     this._initialize();
   },
   /**
@@ -99,7 +99,7 @@ var BaseCollection = Backbone.Collection.extend({
    * @return {attributes.data|*}
    * @author wyj 14.11.16
    */
-  parse: function(resp, xhr) {
+  parse: function (resp, xhr) {
     var ctx = this;
     if (Est.isEmpty(resp)) {
       return [];
@@ -107,7 +107,7 @@ var BaseCollection = Backbone.Collection.extend({
     if (!resp.success && resp.msg) {
       if (resp.msgType === "notLogin" && !Est.isEmpty(this.url)) {
         Est.trigger('checkLogin');
-      } else{
+      } else {
         BaseUtils.tip(resp.msg, { zIndex: 5000 });
       }
     }
@@ -127,7 +127,7 @@ var BaseCollection = Backbone.Collection.extend({
    * @param model
    * @author wyj 14.11.16
    */
-  _parseUrl: function(model) {
+  _parseUrl: function (model) {
     var page = 1,
       pageSize = 16;
     if (model && model.get('pageSize')) {
@@ -151,8 +151,17 @@ var BaseCollection = Backbone.Collection.extend({
    * @param {[type]} name  [description]
    * @param {[type]} value [description]
    */
-  _setParam: function(name, value) {
+  _setParam: function (name, value) {
     this.__params[name] = value;
+    this._parseUrl(this.paginationModel);
+  },
+  /**
+   * 获取请求参数
+   * @param  {[type]} name [description]
+   * @return {[type]}      [description]
+   */
+  _getParam: function (name) {
+    return this.__params[name];
   },
   /**
    * 拼装请求参数
@@ -160,9 +169,9 @@ var BaseCollection = Backbone.Collection.extend({
    *
    * @return {[type]} [description]
    */
-  _getParams: function() {
+  _getParams: function () {
     var result = '';
-    Est.each(this.__params, function(val, key) {
+    Est.each(this.__params, function (val, key) {
       result += ('&' + key + '=' + val);
     }, this);
     return result;
@@ -175,7 +184,7 @@ var BaseCollection = Backbone.Collection.extend({
    * @param resp
    * @author wyj 14.11.16
    */
-  _parsePagination: function(resp) {
+  _parsePagination: function (resp) {
     resp.attributes = resp.attributes || {
       page: 1,
       per_page: 10,
@@ -194,8 +203,8 @@ var BaseCollection = Backbone.Collection.extend({
    * @private
    * @author wyj 14.11.16
    */
-  _paginationRender: function() {
-    seajs.use(['Pagination'], Est.proxy(function(Pagination) {
+  _paginationRender: function () {
+    seajs.use(['Pagination'], Est.proxy(function (Pagination) {
       if (!Pagination) return;
       if (!this.pagination) {
         var $el = $(this.options.el);
@@ -231,10 +240,10 @@ var BaseCollection = Backbone.Collection.extend({
    *                 });
    *         }
    */
-  _load: function(instance, context, model) {
+  _load: function (instance, context, model) {
     this._parseUrl(model);
     return instance.fetch({
-      success: function() {
+      success: function () {
         if (!context.options.diff) context._empty();
       },
       cacheData: this.options.cache,
@@ -250,7 +259,7 @@ var BaseCollection = Backbone.Collection.extend({
    * @example
    *        this._setItemId('Category00000000000000000032');
    */
-  _setItemId: function(itemId) {
+  _setItemId: function (itemId) {
     this._itemId = itemId;
   },
   /**
@@ -258,7 +267,7 @@ var BaseCollection = Backbone.Collection.extend({
    * @method _set
    * @param {[type]} list [description]
    */
-  _set: function(list) {
+  _set: function (list) {
     return this._super('view')._setModels(list);
   },
   /**
@@ -267,7 +276,7 @@ var BaseCollection = Backbone.Collection.extend({
    * @method [集合] - _empty ( 清空列表 )
    * @author wyj 14.11.15
    */
-  _empty: function() {
+  _empty: function () {
     if (this.collection) {
       var len = this.collection.length;
       while (len > -1) {
