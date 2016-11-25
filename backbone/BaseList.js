@@ -356,6 +356,13 @@ var BaseList = SuperView.extend({
             time: 2000
           });
         }
+         if (!result) {
+          result = { success: false, msg: '请求未知错误' };
+          ctx.errorFetch.call(ctx, result);
+        }
+        if (result && !result.success && ctx.errorFetch){
+          ctx.errorFetch.call(ctx, result);
+        }
         ctx._removeNoResult();
         try {
           if (ctx._getTotalPage() === ctx._getPage()) {
@@ -371,7 +378,7 @@ var BaseList = SuperView.extend({
           Est.trigger('checkLogin');
           debug('Error4 -> _load -> ' + result.msg); //debug__
         }
-        ctx._afterLoad(options, result);
+        ctx._afterLoad(result);
         //if (ctx._options.diff) ctx._setModels();
         if (ctx._options.subRender) ctx._filterRoot();
         //if (ctx._options.filter) ctx._filterCollection();
@@ -385,7 +392,7 @@ var BaseList = SuperView.extend({
         }
       });
     } else {
-      ctx._afterLoad(options);
+      ctx._afterLoad();
       ctx._resetModels();
       if (!ctx._ready_component_) {
         ctx._finally();
@@ -472,9 +479,9 @@ var BaseList = SuperView.extend({
    * @method [private] - _afterLoad
    * @private
    */
-  _afterLoad: function(options, response) {
+  _afterLoad: function(response) {
     if (this.afterLoad)
-      this.afterLoad.call(this, this.collection, response);
+      this.afterLoad.call(this, response);
   },
   /**
    * 初始化items

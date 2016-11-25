@@ -678,7 +678,8 @@ var SuperView = Backbone.View.extend({
         list.push({
           watch: watch.length > 1 ? watch[1] : model[1].split(':')[0],
           render: render.length > 1 ? render[1] : '',
-          change: change.length > 1 ? Est.trim(change[1].substring(0, change[1].indexOf('('))) : null: null
+          change: change.length > 1 ? Est.trim(change[1].substring(0,
+            change[1].indexOf('(') === -1 ? change[1].length : change[1].indexOf('('))) : null
         });
       }));
     }

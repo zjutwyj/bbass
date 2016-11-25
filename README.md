@@ -4,35 +4,112 @@
 ```js
 // 普通视图
 var BaseView = BaseView.extend({
+
   template: ``
+
 });
 
 // 列表视图
 var list = BaseList.extend({
   initialize: fucntion(){
     this._super({
+      template: `<div>视图内容<ul class="list"></ul></div>`,
       model: BaseModel.extend({
-        fields: ['name'], // 最终要获取的字段
-        baseId: 'id',
+        fields: ['name'],   // 最终要获取的字段
+        baseId: 'id',       // 映射数据库主键字段
         baseUrl: CONST.API + '/product/detail',
         // 保存修改删除提示
         continueAdd: true,  // 继续添加
-        saveTip: true,     // 保存修改提示
-        deleteTip: true   // 删除提示
+        saveTip: true,      // 保存修改提示
+        deleteTip: true     // 删除提示
       }),
       collection: BaseCollection.extend({
-        url: function() {
-          var end = '?page=' + this.paginationModel.get('page') + '&pageSize=' + this.paginationModel.get('pageSize');
-          return CONST.PAGE_API + '/index/list' + end;
-        }
+        url: CONST.PAGE_API + '/index/list'
       }),
       item: BaseItem.extend({
         tagName: 'li',
-        className: 'item-li'
+        className: 'item-li',
+        template: `<div>列表单视图</div>`,
+        filter: function(model){}, // 过滤模型类
       }),
-      render: '.list' // 需要把列表渲染到当前视图中的某个位置
+      items: [],            // 当指定items时， collection中的url将失效，采用items数组作为列表
+      render: '.list',      // 需要把列表渲染到当前视图中的某个位置
+      append: false,        // 是否是追加内容， 默认为替换
+      checkAppend: false,   // 鼠标点击checkbox， checkbox是否追加  需在BaseItem事件中添加 'click .toggle': '_check',
+      checkToggle: true,    // 是否选中切换
+      pagination: true/selector, // 是否显示分页 view视图中相应加入<div id="pagination-container"></div>; pagination可为元素选择符
+      page: parseInt(Est.cookie('orderList_page')) || 1, //设置起始页 所有的分页数据都会保存到cookie中， 以viewId + '_page'格式存储， 注意cookie取的是字符串， 要转化成int
+      pageSize: parseInt(Est.cookie('orderList_pageSize')) || 16, // 设置每页显示个数
+      max: 5,             // 限制显示个数
+      sortField: 'sort',  // 上移下移字段名称， 默认为sort
+      cache: true,        // 数据缓存到内存中
+      session: true,      // 数据缓存到浏览器中，下次打开浏览器，请求的数据直接从浏览器缓存中读取
+      // 以下为树型列表时 需要的参数
+      subRender: '.node-tree',  // 下级分类的容器选择符
+      collapse: '.node-collapse' 展开/收缩元素选择符
+      parentId: 'belongId',     // 分类 的父类ID
+      categoryId: 'categoryId', // 分类 的当前ID
+      rootId: 'isroot',         // 一级分类字段名称
+      rootValue: '00'           // 一级分类字段值  可为数组[null, 'Syscode_']   数组里的选项可为方法， 返回true与false
+      extend: true              // false收缩 true为展开
+
+       // 约定事件
+      setValue: function(val){},  // 手动为组件赋值，内可加逻辑代码
+      onChange: fucntion(){},     // 手动调用，内可加逻辑代码
+      onUpdate: function(){},     // 当模型类改变时系统会实时调用这个回调
+      onReady: fucntion(){},      // 组件渲染完毕
+
+      enter: '#submit' // 执行回车后的按钮点击的元素选择符
+      toolTip: true,    // 是否显示title提示框   html代码： <div class="tool-tip" data-title="提示内容">内容</div>
+      data: {}          // 初始化时模型类数据
     });
-  }
+  },
+  // 组件模型类初始化
+  init: function(response){
+    this._setDefault('args.name', 'a');   // 初始化数据
+    return {                              // 也可以这样初始化
+      "args.name": 'a',
+      "args.memberCount": response.memberCount // 从请求数据中取数据
+    };
+  },
+
+  // 数据载入前
+  beforeLoad: function(options){
+    this._setParam('page', 4); // 服务器请求前设置请求参数
+  },
+
+  // 数据载入后
+  afterLoad: function(response){},
+
+   // 组件渲染前
+  beforeRender: fucntion(){},
+
+  // 组件渲染后
+  afterRender: function(){},
+
+  // 监听的字段改变时回调
+  update: function(name){},
+
+  // 当模型类改变时系统会实时调用这个回调 (注：状态字段改变时也会触发此方法)
+  change: fucntion(){
+    this._set('memberCount', this._get('memberCount')*2);  // 当模型类改变进重新计算memberCount值
+  },
+
+  // 过滤操作
+  filter: function(){},
+
+  // 模型类保存前
+  beforeSave: function(){},
+
+  // 模型类保存后
+  afterSave: fucntion(model, response){},
+
+  // 保存失败回调
+  errorSave: function(response){},
+
+  // 组件销毁时
+  destory: function(){}
+
 });
 
 // 表单提交视图
@@ -40,13 +117,38 @@ var detail = BaseDetail.extend({
   initialize: fucntion(){
     this._super({
       model: BaseModel.extend({
-        fields: ['name'], // 最终要获取的字段
-        baseId: 'id',
-        baseUrl: CONST.API + '/product/detail'
+        fields: ['name'],   // 最终要获取的字段
+        baseId: 'id',       // 映射数据库主键字段
+        baseUrl: CONST.API + '/product/detail',
+        // 保存修改删除提示
+        continueAdd: true,  // 继续添加
+        saveTip: true,      // 保存修改提示
+        deleteTip: true     // 删除提示
       }),
+      id: ctx.model.get('id'), // 当不是以dialog形式打开的时候， 需要传递ID值
+      page: ctx._getPage() // 点击返回按钮且需要定位到第几页时， 传入page值，
+      hideSaveBtn: true, // 保存成功后的弹出提示框中是否隐藏保存按钮
+      hideOkBtn: true, // 保存成功后的弹出提示框中是否隐藏确定按钮
+      autoHide: true, // 保存成功后是否自动隐藏提示对话框
       form: '#form:#submit', // 表单提交配置,#form为提交作用域，#submit为提交按钮
+
+       // 约定事件
+      setValue: function(val){},  // 手动为组件赋值，内可加逻辑代码
+      onChange: fucntion(){},     // 手动调用，内可加逻辑代码
+      onUpdate: function(){},     // 当模型类改变时系统会实时调用这个回调
+      onReady: fucntion(){},      // 组件渲染完毕
+
+      enter: '#submit'  // 执行回车后的按钮点击的元素选择符
+      toolTip: true,    // 是否显示title提示框   html代码： <div class="tool-tip" data-title="提示内容">内容</div>
+      data: {}          // 初始化时模型类数据
     });
   },
+
+  // 组件渲染前
+  beforeRender: fucntion(){},
+
+  // 组件渲染后
+  afterRender: function(){},
 
   // 模型类保存前
   beforeSave: function(){},
@@ -58,7 +160,9 @@ var detail = BaseDetail.extend({
   errorSave: function(response){},
 
   // 获取数据出错
-  errorFetch: function(response){}
+  errorFetch: function(response){},
+
+  //
 });
 var instancd = new BaseDetail({
   id: 1    // 如果传入ID参数， 则系统会自动请求详细表单内容
@@ -72,57 +176,11 @@ var Module = BaseView.extend({
   // 组件初始化
   initialize: fucntion  (){
     this._super({
-
-      // 通用部分
       template: template, // 字符串模板
       modelBind: true,    // 主要用于表单改变时及时更新到模型类中，默认为change改变， 若想及时更新可以使用  data-bind-type="keyup" 表示按下键盘时触发(推荐使用bb-model="name:keyup")
       toolTip: true, // 是否显示title提示框   html代码： <div class="tool-tip" data-title="提示内容">内容</div>
       enter: '#submit' // 执行回车后的按钮点击的元素选择符
       data: {} // 传递给模型类的数据
-
-      // 约定事件
-      setValue: function(val){}, // 手动为组件赋值，内可加逻辑代码
-      onChange: fucntion(){}, // 手动调用，内可加逻辑代码
-      onUpdate: function(){}, // 当模型类改变时系统会实时调用这个回调
-      onReady: fucntion(){},  // 组件渲染完毕
-
-      // BaseList 部分
-      model: ProductModel, // 模型类,
-      collection:  ProductCollection,// 集合,
-      item: ProductItem, // 单视图
-      render: '.product-list', 插入列表的容器选择符, 若为空则默认插入到$el中
-      items: [], // 数据不是以url的形式获取时 (可选), items可为function形式传递;
-      append: false, // 是否是追加内容， 默认为替换
-      checkAppend: false, // 鼠标点击checkbox， checkbox是否追加  需在BaseItem事件中添加 'click .toggle': '_check',
-      checkToggle: true,// 是否选中切换
-      pagination: true/selector, // 是否显示分页 view视图中相应加入<div id="pagination-container"></div>; pagination可为元素选择符
-      page: parseInt(Est.cookie('orderList_page')) || 1, //设置起始页 所有的分页数据都会保存到cookie中， 以viewId + '_page'格式存储， 注意cookie取的是字符串， 要转化成int
-      pageSize: parseInt(Est.cookie('orderList_pageSize')) || 16, // 设置每页显示个数
-      max: 5, // 限制显示个数
-      sortField: 'sort', // 上移下移字段名称， 默认为sort
-      itemId: 'Category_00000000000123', // 当需要根据某个ID查找列表时， 启用此参数， 方便
-      cache: true, // 数据缓存到内存中
-      session: true, // 数据缓存到浏览器中，下次打开浏览器，请求的数据直接从浏览器缓存中读取
-      // 以下为树型列表时 需要的参数
-      subRender: '.node-tree', // 下级分类的容器选择符
-      collapse: '.node-collapse' 展开/收缩元素选择符
-      parentId: 'belongId', // 分类 的父类ID
-      categoryId: 'categoryId', // 分类 的当前ID
-      rootId: 'isroot', // 一级分类字段名称
-      rootValue: '00' // 一级分类字段值  可为数组[null, 'Syscode_']   数组里的选项可为方法， 返回true与false
-      extend: true // false收缩 true为展开
-
-      // BaseItem 部分
-      filter: function(model){}, // 过滤模型类
-
-      // BaseDetail 部分
-      id: ctx.model.get('id'), // 当不是以dialog形式打开的时候， 需要传递ID值
-      page: ctx._getPage() // 点击返回按钮且需要定位到第几页时， 传入page值，
-      hideSaveBtn: true, // 保存成功后的弹出提示框中是否隐藏保存按钮
-      hideOkBtn: true, // 保存成功后的弹出提示框中是否隐藏确定按钮
-      autoHide: true, // 保存成功后是否自动隐藏提示对话框
-      form: '#form:#submit', // 表单提交配置,#form为提交作用域，#submit为提交按钮
-
     );
   },
   // 组件模型类初始化
@@ -199,7 +257,7 @@ this._region('imagePickerConfig', ImagePickerConfig, {
 >bb-watch:  监听的字段，多个字段以逗号隔开(当只要渲染当前元素时， 可以使用bb-watch="args.name:style"简写,多个字段以逗号隔开，错误写法bb-watch="args.name,args.color:style:html",正确写法：bb-watch="args.name:style,args.color:html")<br>
 bb-render: 需要重新渲染的元素或属性，后面带:style(样式) :class(属性) :html(内容) :value(表单)若不带则整个dom替换掉
            当同一个元素带多个属性时，可简写为.bind:style:html:class<br>
-bb-change: 事件函数(其中参数为改变的字段名称)<br>
+bb-change: 事件函数(其中参数为改变的字段名称)  注：bb-change  必需放在bb-model后面<br>
 【提示:】 使用:html时， 确保子元素没有使用指令，否则指令将失效
 
 ### 表单元素双向绑定

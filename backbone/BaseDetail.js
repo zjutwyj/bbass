@@ -144,7 +144,7 @@ var BaseDetail = SuperView.extend({
       ctx.model.set('id', ctx.passId);
       ctx.model.set('_data', ctx._options.data);
       ctx.model.set('CONST', CONST);
-      if (ctx.beforeLoad) ctx.beforeLoad.call(this);
+      if (ctx.beforeLoad) ctx.beforeLoad.call(this, ctx._options);
       ctx.model.fetch().done(function(response) {
         if (response.msgType === 'notLogin') {
           Est.trigger('checkLogin');

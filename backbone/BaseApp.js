@@ -164,10 +164,10 @@ Est.extend(BaseApp.prototype, {
     try {
       if (this.getView(name)) {
         if (this.getView(name).destroy) this.getView(name).destroy();
-        this.getView(name)._destroy()
-        this.getView(name)._empty();
-        this.getView(name).stopListening();
-        this.getView(name).$el.off().remove();
+        if (this.getView(name)._destroy) this.getView(name)._destroy()
+        if (this.getView(name)._empty) this.getView(name)._empty();
+        if (this.getView(name).stopListening) this.getView(name).stopListening();
+        if (this.getView(name).$el)this.getView(name).$el.off().remove();
       }
       delete this.instance[name];
     } catch (e) {
